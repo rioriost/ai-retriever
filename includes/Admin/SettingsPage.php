@@ -76,7 +76,7 @@ final class SettingsPage
         add_options_page(
             "WP Retriever",
             "WP Retriever",
-            (string) WP_RETLIEVER_ADMIN_CAPABILITY,
+            (string) WP_RETRIEVER_ADMIN_CAPABILITY,
             self::PAGE_SLUG,
             [self::class, "render"],
         );
@@ -84,7 +84,7 @@ final class SettingsPage
 
     public static function settings(): void
     {
-        register_setting("wp_retriever", WP_RETLIEVER_OPTION_KEY, [
+        register_setting("wp_retriever", WP_RETRIEVER_OPTION_KEY, [
             "sanitize_callback" => [Settings::class, "sanitize"],
         ]);
     }
@@ -104,9 +104,9 @@ final class SettingsPage
 
         wp_enqueue_script(
             "wp-retriever-admin-backfill",
-            WP_RETLIEVER_PLUGIN_URL . "assets/admin-backfill.js",
+            WP_RETRIEVER_PLUGIN_URL . "assets/admin-backfill.js",
             [],
-            WP_RETLIEVER_VERSION,
+            WP_RETRIEVER_VERSION,
             true,
         );
         wp_add_inline_script(
@@ -137,7 +137,7 @@ final class SettingsPage
 
     public static function handle_initialize(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
         check_admin_referer("wp_retriever_initialize");
@@ -206,7 +206,7 @@ final class SettingsPage
 
     private static function assert_ajax_backfill_access(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_send_json_error(["message" => self::text("forbidden")], 403);
         }
         check_ajax_referer("wp_retriever_backfill", "nonce");
@@ -254,7 +254,7 @@ final class SettingsPage
 
     public static function handle_test_embedding(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
         check_admin_referer("wp_retriever_test_embedding");
@@ -288,7 +288,7 @@ final class SettingsPage
 
     public static function handle_test_db(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
         check_admin_referer("wp_retriever_test_db");
@@ -317,7 +317,7 @@ final class SettingsPage
 
     public static function handle_live_vector_query(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
         check_admin_referer("wp_retriever_live_vector_query");
@@ -379,7 +379,7 @@ final class SettingsPage
 
     public static function handle_retry_failed(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
         check_admin_referer("wp_retriever_retry_failed");
@@ -397,7 +397,7 @@ final class SettingsPage
             PostSync::on_save_post($id, get_post($id));
             $processed++;
             if (
-                get_post_meta($id, WP_RETLIEVER_POSTMETA_LAST_ERROR, true) !==
+                get_post_meta($id, WP_RETRIEVER_POSTMETA_LAST_ERROR, true) !==
                 ""
             ) {
                 $errors++;
@@ -415,7 +415,7 @@ final class SettingsPage
 
     public static function render(): void
     {
-        if (!current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
 
@@ -455,7 +455,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<select id="wp-retriever-search-mode" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[search_mode]">
 								<?php foreach (["off", "a_b_admin", "full"] as $mode): ?>
 									<option value="<?php echo esc_attr($mode); ?>" <?php selected(
@@ -470,10 +470,10 @@ final class SettingsPage
 						<th scope="row"><?php echo esc_html(self::text("display_badges")); ?></th>
 						<td>
 							<input type="hidden" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[display_source_badges]" value="0">
 							<label><input type="checkbox" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[display_source_badges]" value="1" <?php checked(
     $opts["display_source_badges"],
 ); ?>> [RAG] / [標準検索]</label>
@@ -486,7 +486,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<select id="wp-retriever-provider" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[embedding_provider]">
 								<?php foreach (
             [
@@ -518,7 +518,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<input id="wp-retriever-openai-key" type="password" class="regular-text" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[openai_api_key]" value="" placeholder="<?php echo esc_attr(
     !empty($opts["openai_api_key"]) ? self::text("api_key_configured") : "",
 ); ?>" autocomplete="off">
@@ -533,7 +533,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<select id="wp-retriever-openai-model" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[openai_embedding_model]">
 								<option value="text-embedding-3-small" data-dimensions="1536" <?php selected(
             $model,
@@ -562,7 +562,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<select id="wp-retriever-custom-preset" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[custom_embedding_preset]">
 								<option value="custom" <?php selected(
             $custom_preset,
@@ -597,7 +597,7 @@ final class SettingsPage
           self::text("custom_embedding_format"),
       ); ?></label></th>
 						<td><input id="wp-retriever-custom-format" type="text" class="regular-text" name="<?php echo esc_attr(
-          WP_RETLIEVER_OPTION_KEY,
+          WP_RETRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_format]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_format"],
 ); ?>" readonly></td>
@@ -607,7 +607,7 @@ final class SettingsPage
           self::text("custom_endpoint"),
       ); ?></label></th>
 						<td><input id="wp-retriever-custom-endpoint" type="url" class="regular-text" name="<?php echo esc_attr(
-          WP_RETLIEVER_OPTION_KEY,
+          WP_RETRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_endpoint]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_endpoint"],
 ); ?>"></td>
@@ -618,7 +618,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<input id="wp-retriever-custom-key" type="password" class="regular-text" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[custom_embedding_api_key]" value="" placeholder="<?php echo esc_attr(
     !empty($opts["custom_embedding_api_key"])
         ? self::text("api_key_configured")
@@ -634,7 +634,7 @@ final class SettingsPage
           self::text("embedding_model"),
       ); ?></label></th>
 						<td><input id="wp-retriever-custom-model" type="text" class="regular-text" name="<?php echo esc_attr(
-          WP_RETLIEVER_OPTION_KEY,
+          WP_RETRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_model]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_model"],
 ); ?>"></td>
@@ -645,7 +645,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<input id="wp-retriever-dimensions" type="number" min="1" max="4096" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[embedding_dimensions]" value="<?php echo esc_attr(
     (string) $opts["embedding_dimensions"],
 ); ?>">
@@ -672,10 +672,10 @@ final class SettingsPage
 					<tr>
 						<td colspan="2">
 							<input type="hidden" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[japanese_normalization_enabled]" value="0">
 							<label><input id="wp-retriever-japanese-normalization" type="checkbox" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[japanese_normalization_enabled]" value="1" <?php checked(
     $opts["japanese_normalization_enabled"],
 ); ?>> <?php echo esc_html(
@@ -692,7 +692,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<textarea id="wp-retriever-custom-fields" class="large-text code" rows="3" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[indexed_custom_fields]"><?php echo esc_textarea(
     implode("\n", (array) $opts["indexed_custom_fields"]),
 ); ?></textarea>
@@ -707,7 +707,7 @@ final class SettingsPage
       ); ?></label></th>
 						<td>
 							<textarea id="wp-retriever-taxonomies" class="large-text code" rows="3" name="<?php echo esc_attr(
-           WP_RETLIEVER_OPTION_KEY,
+           WP_RETRIEVER_OPTION_KEY,
        ); ?>[indexed_taxonomies]"><?php echo esc_textarea(
     implode("\n", (array) $opts["indexed_taxonomies"]),
 ); ?></textarea>
@@ -1122,7 +1122,7 @@ final class SettingsPage
             as $key
         ) {
             echo '<input type="hidden" name="' .
-                esc_attr(WP_RETLIEVER_OPTION_KEY . "[" . $key . "]") .
+                esc_attr(WP_RETRIEVER_OPTION_KEY . "[" . $key . "]") .
                 '" value="' .
                 esc_attr((string) ($opts[$key] ?? "")) .
                 '">';

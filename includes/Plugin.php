@@ -53,7 +53,7 @@ final class Plugin
         }
 
         add_action(
-            "update_option_" . WP_RETLIEVER_OPTION_KEY,
+            "update_option_" . WP_RETRIEVER_OPTION_KEY,
             [self::class, "on_settings_updated"],
             10,
             2,
@@ -61,7 +61,7 @@ final class Plugin
 
         $this->booted = true;
         Logger::debug("plugin", "boot complete", [
-            "version" => WP_RETLIEVER_VERSION,
+            "version" => WP_RETRIEVER_VERSION,
         ]);
     }
 
@@ -116,7 +116,7 @@ final class Plugin
             load_plugin_textdomain(
                 "wp-retriever",
                 false,
-                dirname(plugin_basename(WP_RETLIEVER_PLUGIN_FILE)) .
+                dirname(plugin_basename(WP_RETRIEVER_PLUGIN_FILE)) .
                     "/languages",
             );
         }

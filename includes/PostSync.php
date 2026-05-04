@@ -58,11 +58,11 @@ final class PostSync
             if (
                 get_post_meta(
                     $post_id,
-                    WP_RETLIEVER_POSTMETA_CONTENT_HASH,
+                    WP_RETRIEVER_POSTMETA_CONTENT_HASH,
                     true,
                 ) === $hash
             ) {
-                delete_post_meta($post_id, WP_RETLIEVER_POSTMETA_LAST_ERROR);
+                delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
                 return;
             }
             $chunks = self::chunk_text($text);
@@ -77,20 +77,20 @@ final class PostSync
             );
             update_post_meta(
                 $post_id,
-                WP_RETLIEVER_POSTMETA_CONTENT_HASH,
+                WP_RETRIEVER_POSTMETA_CONTENT_HASH,
                 $hash,
             );
             update_post_meta(
                 $post_id,
-                WP_RETLIEVER_POSTMETA_INDEXED_AT,
+                WP_RETRIEVER_POSTMETA_INDEXED_AT,
                 time(),
             );
-            delete_post_meta($post_id, WP_RETLIEVER_POSTMETA_LAST_ERROR);
+            delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
             SearchInterceptor::purge_query_cache();
         } catch (\Throwable $e) {
             update_post_meta(
                 $post_id,
-                WP_RETLIEVER_POSTMETA_LAST_ERROR,
+                WP_RETRIEVER_POSTMETA_LAST_ERROR,
                 $e->getMessage(),
             );
             Logger::error("sync", "post embedding failed", [

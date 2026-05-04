@@ -46,7 +46,7 @@ final class SearchInterceptor
         if (
             $user_query === "" ||
             !Settings::should_intercept_search(
-                current_user_can((string) WP_RETLIEVER_ADMIN_CAPABILITY),
+                current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY),
             )
         ) {
             self::$processed_queries[$qid] = "skipped";
@@ -67,7 +67,7 @@ final class SearchInterceptor
             }
         }
 
-        $rag = new LocalVectorProvider()->retrieve(
+        $rag = (new LocalVectorProvider())->retrieve(
             TextNormalizer::vector_query($user_query),
         );
         $rag_ids = $rag->ok

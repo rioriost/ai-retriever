@@ -12,7 +12,7 @@ namespace WPRetriever;
 final class Settings
 {
     public const DEFAULTS = [
-        "schema_version" => WP_RETLIEVER_VERSION,
+        "schema_version" => WP_RETRIEVER_VERSION,
         "search_mode" => "off", // off|a_b_admin|full.
         "sync_enabled" => true,
         "kill_switch_global" => false,
@@ -98,7 +98,7 @@ final class Settings
         if (self::$cache !== null) {
             return self::$cache;
         }
-        $stored = get_option(WP_RETLIEVER_OPTION_KEY, []);
+        $stored = get_option(WP_RETRIEVER_OPTION_KEY, []);
         if (!is_array($stored)) {
             $stored = [];
         }
@@ -114,13 +114,13 @@ final class Settings
 
     public static function install_or_upgrade(): void
     {
-        $current = get_option(WP_RETLIEVER_OPTION_KEY, []);
+        $current = get_option(WP_RETRIEVER_OPTION_KEY, []);
         if (!is_array($current)) {
             $current = [];
         }
-        $current["schema_version"] = WP_RETLIEVER_VERSION;
+        $current["schema_version"] = WP_RETRIEVER_VERSION;
         update_option(
-            WP_RETLIEVER_OPTION_KEY,
+            WP_RETRIEVER_OPTION_KEY,
             self::sanitize(array_replace(self::DEFAULTS, $current)),
             false,
         );
@@ -129,7 +129,7 @@ final class Settings
 
     public static function sanitize(array $raw): array
     {
-        $stored = get_option(WP_RETLIEVER_OPTION_KEY, []);
+        $stored = get_option(WP_RETRIEVER_OPTION_KEY, []);
         $base = array_replace(self::DEFAULTS, is_array($stored) ? $stored : []);
         $out = $base;
         foreach (self::DEFAULTS as $key => $default) {
@@ -236,7 +236,7 @@ final class Settings
         );
         $out["vector_index_m"] = max(3, min(200, (int) $out["vector_index_m"]));
         $out["top_k"] = max(1, min(200, (int) $out["top_k"]));
-        $out["schema_version"] = WP_RETLIEVER_VERSION;
+        $out["schema_version"] = WP_RETRIEVER_VERSION;
 
         return $out;
     }
@@ -274,7 +274,7 @@ final class Settings
             (int) ($result["errors"] ?? 0),
         );
         $current["initial_backfill_reset_reason"] = "";
-        update_option(WP_RETLIEVER_OPTION_KEY, self::sanitize($current), false);
+        update_option(WP_RETRIEVER_OPTION_KEY, self::sanitize($current), false);
         self::$cache = null;
     }
 
@@ -285,7 +285,7 @@ final class Settings
         $current["initial_backfill_processed"] = 0;
         $current["initial_backfill_errors"] = 0;
         $current["initial_backfill_reset_reason"] = $reason;
-        update_option(WP_RETLIEVER_OPTION_KEY, self::sanitize($current), false);
+        update_option(WP_RETRIEVER_OPTION_KEY, self::sanitize($current), false);
         self::$cache = null;
     }
 

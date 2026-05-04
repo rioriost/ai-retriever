@@ -15,7 +15,7 @@ final class LocalVectorProvider
         try {
             $embedder = EmbeddingProviderFactory::make();
             $embedding = $embedder->embed(TextNormalizer::vector_query($query));
-            $results = new LocalVectorRepository()->search_with_chunks(
+            $results = (new LocalVectorRepository())->search_with_chunks(
                 $embedding,
                 $embedder->model(),
                 (int) Settings::get("top_k"),

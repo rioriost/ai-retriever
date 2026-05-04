@@ -117,7 +117,7 @@ final class IndexDiagnostics
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''",
-                WP_RETLIEVER_POSTMETA_LAST_ERROR,
+                WP_RETRIEVER_POSTMETA_LAST_ERROR,
             ),
         );
     }
@@ -131,7 +131,7 @@ final class IndexDiagnostics
         $rows = $wpdb->get_col(
             $wpdb->prepare(
                 "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
-                WP_RETLIEVER_POSTMETA_LAST_ERROR,
+                WP_RETRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),
         );
@@ -147,7 +147,7 @@ final class IndexDiagnostics
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
-                WP_RETLIEVER_POSTMETA_LAST_ERROR,
+                WP_RETRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),
             ARRAY_A,
