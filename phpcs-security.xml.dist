@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<ruleset name="WP Retriever Security Scan">
+	<description
+    >Security-focused PHPCS scan using WordPress Coding Standards, WordPress VIP, and PHPCompatibilityWP.</description>
+
+	<file>wp-retriever.php</file>
+	<file>uninstall.php</file>
+	<file>includes</file>
+
+	<exclude-pattern>vendor/*</exclude-pattern>
+	<exclude-pattern>dist/*</exclude-pattern>
+	<exclude-pattern>docker/*</exclude-pattern>
+
+	<arg name="extensions" value="php" />
+	<arg name="colors" />
+	<arg value="s" />
+
+	<config name="testVersion" value="8.0-" />
+	<config name="minimum_supported_wp_version" value="6.0" />
+
+	<rule ref="WordPress.Security" />
+	<rule ref="WordPressVIPMinimum.Security" />
+	<rule ref="PHPCompatibilityWP" />
+
+	<!-- The plugin intentionally uses explicit SQL for MariaDB VECTOR/VECTOR INDEX,
+	     which dbDelta cannot represent. Query safety is still checked separately. -->
+	<rule ref="WordPress.DB.PreparedSQL.NotPrepared">
+		<severity>5</severity>
+	</rule>
+</ruleset>

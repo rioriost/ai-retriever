@@ -1,0 +1,36 @@
+# Build outputs
+# -------------
+# `make zip` writes the distributable plugin archive here. Artifacts
+# are reproducible from HEAD via the Makefile, so they have no place
+# in version control.
+dist/
+build/
+
+# macOS Finder metadata. Created on every directory the user opens
+# in Finder; never wanted in a release zip or commit.
+.DS_Store
+
+# Editor backup / swap files. Common across vim, emacs, and the
+# `sed -i.bak` pattern used in this repo's ad-hoc fixes.
+*.bak
+*~
+*.swp
+*.swo
+
+# IDE / editor project metadata.
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# Local Docker environment overrides. Keep .env.example tracked.
+.env
+
+# PHP local artifacts (none currently produced, but easy to acquire
+# accidentally during local debugging or future composer adoption).
+/vendor/
+composer.lock
+.phpunit.result.cache
+
+# Broken Git repository backups.
+.git.broken-*

@@ -1,0 +1,31 @@
+{
+  "name": "riost/wp-retriever",
+  "description": "Native-vector RAG search for WordPress.",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": "^8.0"
+  },
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Rio Fujita",
+      "email": "rio_github@rio.st"
+    }
+  ],
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.13",
+    "wp-coding-standards/wpcs": "^3.3",
+    "automattic/vipwpcs": "^3.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.1",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.2"
+  },
+  "scripts": {
+    "security:phpcs": "phpcs --standard=phpcs-security.xml.dist",
+    "security:audit": "composer audit --no-interaction"
+  }
+}
