@@ -2,15 +2,15 @@
 /**
  * Post indexing hooks.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Database\LocalVectorRepository;
-use WPRetliever\Embedding\EmbeddingProviderFactory;
+use WPRetriever\Database\LocalVectorRepository;
+use WPRetriever\Embedding\EmbeddingProviderFactory;
 
 final class PostSync
 {

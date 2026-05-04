@@ -1,4 +1,4 @@
-# WP Retliever Architecture Plan
+# WP Retriever Architecture Plan
 
 ## Goal
 

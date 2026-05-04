@@ -2,12 +2,12 @@
 /**
  * Settings schema and sanitization.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
 final class Settings
 {

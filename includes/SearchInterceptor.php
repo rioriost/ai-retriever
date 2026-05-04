@@ -2,15 +2,15 @@
 /**
  * Hybrid RAG + core search rewrite.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Provider\LocalVectorProvider;
-use WPRetliever\Provider\RetrieveResult;
+use WPRetriever\Provider\LocalVectorProvider;
+use WPRetriever\Provider\RetrieveResult;
 
 final class SearchInterceptor
 {
@@ -67,7 +67,7 @@ final class SearchInterceptor
             }
         }
 
-        $rag = (new LocalVectorProvider())->retrieve(
+        $rag = new LocalVectorProvider()->retrieve(
             TextNormalizer::vector_query($user_query),
         );
         $rag_ids = $rag->ok
@@ -109,7 +109,7 @@ final class SearchInterceptor
             !(bool) Settings::get("display_source_badges") ||
             !is_string($title) ||
             $title === "" ||
-            str_contains($title, "wp-retliever-hit-badges")
+            str_contains($title, "wp-retriever-hit-badges")
         ) {
             return (string) $title;
         }
@@ -290,7 +290,7 @@ final class SearchInterceptor
             $labels[] = "標準検索";
         }
         $html =
-            '<span class="wp-retliever-hit-badges" style="display:block;font-size:.72em;font-weight:400;line-height:1.4;margin:0 0 .15em;color:#666;">';
+            '<span class="wp-retriever-hit-badges" style="display:block;font-size:.72em;font-weight:400;line-height:1.4;margin:0 0 .15em;color:#666;">';
         foreach ($labels as $label) {
             $html .=
                 '<span style="display:inline-block;margin-right:.35em;">[' .
@@ -308,7 +308,7 @@ final class SearchInterceptor
             $source_query instanceof \WP_Query
                 ? self::query_context_fingerprint($source_query)
                 : "";
-        return "wp_retliever_q_" .
+        return "wp_retriever_q_" .
             substr(hash("sha256", $query . "|" . $context), 0, 32);
     }
 
@@ -374,7 +374,7 @@ final class SearchInterceptor
     {
         global $wpdb;
 
-        $prefix = "wp_retliever_q_";
+        $prefix = "wp_retriever_q_";
         $transient_like = $wpdb->esc_like("_transient_" . $prefix) . "%";
         $timeout_like = $wpdb->esc_like("_transient_timeout_" . $prefix) . "%";
 

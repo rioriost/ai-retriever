@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetliever\Provider;
+namespace WPRetriever\Provider;
 
-use WPRetliever\Database\LocalVectorRepository;
-use WPRetliever\Embedding\EmbeddingProviderFactory;
-use WPRetliever\Settings;
-use WPRetliever\TextNormalizer;
+use WPRetriever\Database\LocalVectorRepository;
+use WPRetriever\Embedding\EmbeddingProviderFactory;
+use WPRetriever\Settings;
+use WPRetriever\TextNormalizer;
 
 final class LocalVectorProvider
 {
@@ -15,7 +15,7 @@ final class LocalVectorProvider
         try {
             $embedder = EmbeddingProviderFactory::make();
             $embedding = $embedder->embed(TextNormalizer::vector_query($query));
-            $results = (new LocalVectorRepository())->search_with_chunks(
+            $results = new LocalVectorRepository()->search_with_chunks(
                 $embedding,
                 $embedder->model(),
                 (int) Settings::get("top_k"),

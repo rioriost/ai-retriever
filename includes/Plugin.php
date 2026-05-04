@@ -2,17 +2,17 @@
 /**
  * Main plugin bootstrap.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Admin\SettingsPage;
-use WPRetliever\CLI\BackfillCommand;
-use WPRetliever\Database\BackfillQueueSchema;
-use WPRetliever\Database\VectorSchema;
+use WPRetriever\Admin\SettingsPage;
+use WPRetriever\CLI\BackfillCommand;
+use WPRetriever\Database\BackfillQueueSchema;
+use WPRetriever\Database\VectorSchema;
 
 final class Plugin
 {
@@ -114,7 +114,7 @@ final class Plugin
     {
         if (function_exists("load_plugin_textdomain")) {
             load_plugin_textdomain(
-                "wp-retliever",
+                "wp-retriever",
                 false,
                 dirname(plugin_basename(WP_RETLIEVER_PLUGIN_FILE)) .
                     "/languages",

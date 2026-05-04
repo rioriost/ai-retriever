@@ -2,20 +2,20 @@
 /**
  * Shared backfill queue runner for admin and WP-CLI initialization flows.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Database\BackfillQueueSchema;
-use WPRetliever\Database\VectorSchema;
+use WPRetriever\Database\BackfillQueueSchema;
+use WPRetriever\Database\VectorSchema;
 
 final class BackfillRunner
 {
-    public const OPTION_KEY = "wp_retliever_backfill_queue";
-    public const CRON_HOOK = "wp_retliever_process_backfill_queue";
+    public const OPTION_KEY = "wp_retriever_backfill_queue";
+    public const CRON_HOOK = "wp_retriever_process_backfill_queue";
     public const DEFAULT_BATCH_SIZE = 20;
     private const STALE_LOCK_MINUTES = 15;
 
@@ -714,7 +714,7 @@ final class BackfillRunner
         try {
             return bin2hex(random_bytes(16));
         } catch (\Throwable $e) {
-            return uniqid("wp-retliever-", true);
+            return uniqid("wp-retriever-", true);
         }
     }
 

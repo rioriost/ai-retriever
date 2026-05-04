@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetliever\Provider;
+namespace WPRetriever\Provider;
 
 final class ResultHit
 {

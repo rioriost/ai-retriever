@@ -2,16 +2,16 @@
 /**
  * Bulk indexing pipeline for initial backfill jobs.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Database\LocalVectorRepository;
-use WPRetliever\Embedding\EmbeddingProviderFactory;
-use WPRetliever\Embedding\EmbeddingProviderInterface;
+use WPRetriever\Database\LocalVectorRepository;
+use WPRetriever\Embedding\EmbeddingProviderFactory;
+use WPRetriever\Embedding\EmbeddingProviderInterface;
 
 final class BulkBackfillIndexer
 {

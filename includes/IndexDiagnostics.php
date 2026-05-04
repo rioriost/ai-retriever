@@ -2,14 +2,14 @@
 /**
  * Index coverage and failure diagnostics.
  *
- * @package WPRetliever
+ * @package WPRetriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetliever;
+namespace WPRetriever;
 
-use WPRetliever\Database\VectorSchema;
+use WPRetriever\Database\VectorSchema;
 
 final class IndexDiagnostics
 {

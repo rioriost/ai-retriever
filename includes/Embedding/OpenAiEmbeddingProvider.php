@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetliever\Embedding;
+namespace WPRetriever\Embedding;
 
-use WPRetliever\Settings;
+use WPRetriever\Settings;
 
 final class OpenAiEmbeddingProvider implements EmbeddingProviderInterface
 {
