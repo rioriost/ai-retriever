@@ -46,9 +46,9 @@ final class LocalVectorRepository
                 "INSERT INTO {$table} (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES (%d, %d, %s, %s, %s, VEC_FromText(%s), UTC_TIMESTAMP())",
                 $post_id,
                 $i,
-                $chunk,
+                self::clean_text((string) $chunk),
                 $content_hash,
-                $model,
+                self::clean_text($model),
                 self::vector_text($embedding),
             );
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above; VECTOR expression cannot be represented via wpdb insert.
@@ -63,6 +63,11 @@ final class LocalVectorRepository
     {
         global $wpdb;
         $table = VectorSchema::table_name();
+        $rows = [];
+
+        $attempts = 0;
+        retry_write:
+        ++$attempts;
         $rows = [];
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
@@ -102,10 +107,10 @@ final class LocalVectorRepository
                     $rows[] = [
                         "post_id" => $post_id,
                         "chunk_index" => (int) $i,
-                        "chunk_text" => (string) $chunk,
+                        "chunk_text" => self::clean_text((string) $chunk),
                         "content_hash" =>
                             (string) ($item["content_hash"] ?? ""),
-                        "embedding_model" => $model,
+                        "embedding_model" => self::clean_text($model),
                         "embedding" => self::vector_text($embedding),
                     ];
                 }
@@ -120,6 +125,10 @@ final class LocalVectorRepository
         } catch (\Throwable $e) {
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
             $wpdb->query("ROLLBACK");
+            if ($attempts < 3 && self::is_transient_database_error($e)) {
+                usleep(250000 * $attempts);
+                goto retry_write;
+            }
             throw $e;
         }
     }
@@ -249,6 +258,30 @@ final class LocalVectorRepository
             ];
         }
         return $out;
+    }
+
+    private static function is_transient_database_error(\Throwable $e): bool
+    {
+        $message = strtolower($e->getMessage());
+        return str_contains($message, "deadlock") ||
+            str_contains($message, "try restarting transaction") ||
+            str_contains($message, "lock wait timeout");
+    }
+
+    private static function clean_text(string $value): string
+    {
+        $value = str_replace("\0", "", $value);
+        if (function_exists("wp_check_invalid_utf8")) {
+            $checked = wp_check_invalid_utf8($value, true);
+            $value = is_string($checked) ? $checked : "";
+        }
+
+        $cleaned = preg_replace(
+            '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/',
+            "",
+            $value,
+        );
+        return is_string($cleaned) ? $cleaned : "";
     }
 
     /** @param float[] $embedding */

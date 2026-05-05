@@ -119,7 +119,7 @@ final class SettingsPage
                     "delayMs" => 250,
                     "errorDelayMs" => 5000,
                     "maxConsecutiveErrors" => 5,
-                    "concurrency" => 2,
+                    "concurrency" => 1,
                     "i18n" => [
                         "progress" => self::text("init_progress"),
                         "running" => self::text("init_auto_running"),
@@ -731,9 +731,54 @@ final class SettingsPage
 			<hr>
 			<h2><?php echo esc_html("7. " . self::text("live_vector_query")); ?></h2>
 			<?php self::render_live_vector_query(); ?>
+
+			<hr>
+			<h2><?php echo esc_html("8. " . self::text("rag_retrieval_tuning")); ?></h2>
+			<?php self::render_retrieval_tuning($opts); ?>
 		</div>
 		<?php self::render_model_script(); ?>
 		<?php
+    }
+
+    private static function render_retrieval_tuning(array $opts): void
+    {
+        ?>
+        <p><?php echo esc_html(
+            self::text("rag_retrieval_tuning_explain"),
+        ); ?></p>
+        <form method="post" action="options.php">
+            <?php settings_fields("wp_retriever"); ?>
+            <table class="form-table" role="presentation">
+                <tr>
+                    <th scope="row"><label for="wp-retriever-top-k"><?php echo esc_html(
+                        self::text("rag_top_k"),
+                    ); ?></label></th>
+                    <td>
+                        <input id="wp-retriever-top-k" type="number" min="1" max="200" step="1" name="<?php echo esc_attr(
+                            WP_RETRIEVER_OPTION_KEY,
+                        ); ?>[top_k]" value="<?php echo esc_attr((string) $opts["top_k"]); ?>">
+                        <p class="description"><?php echo esc_html(
+                            self::text("rag_top_k_note"),
+                        ); ?></p>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="wp-retriever-min-score"><?php echo esc_html(
+                        self::text("rag_min_score"),
+                    ); ?></label></th>
+                    <td>
+                        <input id="wp-retriever-min-score" type="number" min="0" max="1" step="0.01" name="<?php echo esc_attr(
+                            WP_RETRIEVER_OPTION_KEY,
+                        ); ?>[min_score]" value="<?php echo esc_attr((string) $opts["min_score"]); ?>">
+                        <p class="description"><?php echo esc_html(
+                            self::text("rag_min_score_note"),
+                        ); ?></p>
+                    </td>
+                </tr>
+            </table>
+            <?php submit_button(self::text("save_changes")); ?>
+        </form>
+        <?php
     }
 
     private static function render_live_vector_query(): void
@@ -1384,6 +1429,15 @@ final class SettingsPage
                 "live_query_ok" =>
                     'Live vector query completed. Hits: %1$d, elapsed: %2$d ms.',
                 "live_query_failed" => "Live vector query failed: %s",
+                "rag_retrieval_tuning" => "RAG retrieval tuning",
+                "rag_retrieval_tuning_explain" =>
+                    "Adjust how broadly vector retrieval contributes to search results. If RAG is matching too many unrelated posts, lower the candidate count or raise the minimum score.",
+                "rag_top_k" => "Maximum RAG candidates",
+                "rag_top_k_note" =>
+                    "Upper limit of vector candidates before blending with core WordPress search. Smaller values narrow the retrieval range. Allowed range: 1-200.",
+                "rag_min_score" => "Minimum RAG score",
+                "rag_min_score_note" =>
+                    "Only vector hits with this score or higher are used. Raise this to narrow RAG matches. Typical tuning range: 0.50-0.80.",
                 "score" => "Score",
                 "best_chunk_snippet" => "Best chunk snippet",
                 "index_diagnostics" => "Index diagnostics",
@@ -1524,6 +1578,15 @@ final class SettingsPage
                 "live_query_ok" =>
                     'ライブベクトルクエリー完了。ヒット数: %1$d、経過時間: %2$d ms。',
                 "live_query_failed" => "ライブベクトルクエリー失敗: %s",
+                "rag_retrieval_tuning" => "RAG 取得範囲の調整",
+                "rag_retrieval_tuning_explain" =>
+                    "ベクトル検索の結果をどの程度広く検索結果に混ぜるかを調整します。RAG が関係の薄い投稿まで拾う場合は、候補数を減らすか、最小スコアを上げてください。",
+                "rag_top_k" => "RAG 最大候補数",
+                "rag_top_k_note" =>
+                    "WordPress 標準検索と混ぜる前に取得するベクトル候補の上限です。小さくすると取得範囲が狭くなります。指定範囲: 1〜200。",
+                "rag_min_score" => "RAG 最小スコア",
+                "rag_min_score_note" =>
+                    "このスコア以上のベクトル一致だけを採用します。値を上げると RAG の一致範囲が狭くなります。調整目安: 0.50〜0.80。",
                 "score" => "スコア",
                 "best_chunk_snippet" => "最適チャンク抜粋",
                 "index_diagnostics" => "インデックス診断",

@@ -102,6 +102,13 @@ final class Plugin
             }
         }
 
+        foreach (["top_k", "min_score", "cache_ttl_seconds"] as $key) {
+            if (($old_value[$key] ?? null) !== ($value[$key] ?? null)) {
+                SearchInterceptor::purge_query_cache();
+                break;
+            }
+        }
+
         if (
             ($old_value["japanese_normalization_enabled"] ?? null) !==
             ($value["japanese_normalization_enabled"] ?? null)

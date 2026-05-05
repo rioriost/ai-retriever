@@ -18,6 +18,8 @@ final class BackfillRunner
     public const CRON_HOOK = "wp_retriever_process_backfill_queue";
     public const DEFAULT_BATCH_SIZE = 20;
     private const STALE_LOCK_MINUTES = 15;
+    private const PROCESS_LOCK_OPTION = "wp_retriever_backfill_process_lock";
+    private const PROCESS_LOCK_TTL_SECONDS = 120;
 
     private function __construct() {}
 
@@ -118,51 +120,60 @@ final class BackfillRunner
             @set_time_limit(0);
         }
 
-        BackfillQueueSchema::install_or_upgrade();
-        $limit = max(1, min(200, $limit));
-        $job = self::latest_job(true);
-        if (!is_array($job)) {
+        $process_lock_token = self::worker_token();
+        if (!self::acquire_process_lock($process_lock_token)) {
             return self::status();
         }
 
-        $job_id = (int) $job["id"];
-        $status = (string) $job["status"];
-        if (!in_array($status, ["queued", "running"], true)) {
-            return self::job_state($job);
-        }
-
-        self::reset_stale_processing_items($job_id);
-        self::set_job_status($job_id, "running", "embedding", "");
-
-        $token = self::worker_token();
-        $claimed = self::claim_items($job_id, $token, $limit);
-        if ($claimed === 0) {
-            return self::finish_or_continue($job_id);
-        }
-
-        $post_ids = self::claimed_post_ids($job_id, $token);
-        if ($post_ids === []) {
-            return self::finish_or_continue($job_id);
-        }
-
         try {
-            $batch_result = BulkBackfillIndexer::process_posts($post_ids);
-        } catch (\Throwable $e) {
-            self::release_claimed_items($job_id, $token, $e->getMessage());
-            self::set_job_error($job_id, $e->getMessage());
-            throw $e;
+            BackfillQueueSchema::install_or_upgrade();
+            $limit = max(1, min(200, $limit));
+            $job = self::latest_job(true);
+            if (!is_array($job)) {
+                return self::status();
+            }
+
+            $job_id = (int) $job["id"];
+            $status = (string) $job["status"];
+            if (!in_array($status, ["queued", "running"], true)) {
+                return self::job_state($job);
+            }
+
+            self::reset_stale_processing_items($job_id);
+            self::set_job_status($job_id, "running", "embedding", "");
+
+            $token = self::worker_token();
+            $claimed = self::claim_items($job_id, $token, $limit);
+            if ($claimed === 0) {
+                return self::finish_or_continue($job_id);
+            }
+
+            $post_ids = self::claimed_post_ids($job_id, $token);
+            if ($post_ids === []) {
+                return self::finish_or_continue($job_id);
+            }
+
+            try {
+                $batch_result = BulkBackfillIndexer::process_posts($post_ids);
+            } catch (\Throwable $e) {
+                self::release_claimed_items($job_id, $token, $e->getMessage());
+                self::set_job_error($job_id, $e->getMessage());
+                throw $e;
+            }
+
+            $failed_ids = is_array($batch_result["failed_ids"] ?? null)
+                ? array_values(array_map("intval", $batch_result["failed_ids"]))
+                : [];
+            $failed_ids = array_values(array_intersect($post_ids, $failed_ids));
+            $done_ids = array_values(array_diff($post_ids, $failed_ids));
+
+            self::mark_claimed_items($job_id, $token, $done_ids, "done");
+            self::mark_claimed_items($job_id, $token, $failed_ids, "failed");
+
+            return self::finish_or_continue($job_id);
+        } finally {
+            self::release_process_lock($process_lock_token);
         }
-
-        $failed_ids = is_array($batch_result["failed_ids"] ?? null)
-            ? array_values(array_map("intval", $batch_result["failed_ids"]))
-            : [];
-        $failed_ids = array_values(array_intersect($post_ids, $failed_ids));
-        $done_ids = array_values(array_diff($post_ids, $failed_ids));
-
-        self::mark_claimed_items($job_id, $token, $done_ids, "done");
-        self::mark_claimed_items($job_id, $token, $failed_ids, "failed");
-
-        return self::finish_or_continue($job_id);
     }
 
     /** @return array{processed:int, errors:int, completed_at:int} */
@@ -707,6 +718,34 @@ final class BackfillRunner
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Queue reset.
         $wpdb->query("DELETE FROM {$jobs}");
         delete_option(self::OPTION_KEY);
+    }
+
+    private static function acquire_process_lock(string $token): bool
+    {
+        $payload = [
+            "token" => $token,
+            "expires" => time() + self::PROCESS_LOCK_TTL_SECONDS,
+        ];
+        if (add_option(self::PROCESS_LOCK_OPTION, $payload, "", "no")) {
+            return true;
+        }
+
+        $lock = get_option(self::PROCESS_LOCK_OPTION, []);
+        $expires = is_array($lock) ? (int) ($lock["expires"] ?? 0) : 0;
+        if ($expires > 0 && $expires < time()) {
+            delete_option(self::PROCESS_LOCK_OPTION);
+            return add_option(self::PROCESS_LOCK_OPTION, $payload, "", "no");
+        }
+
+        return false;
+    }
+
+    private static function release_process_lock(string $token): void
+    {
+        $lock = get_option(self::PROCESS_LOCK_OPTION, []);
+        if (is_array($lock) && (string) ($lock["token"] ?? "") === $token) {
+            delete_option(self::PROCESS_LOCK_OPTION);
+        }
     }
 
     private static function worker_token(): string
