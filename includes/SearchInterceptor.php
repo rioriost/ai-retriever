@@ -10,10 +10,10 @@ declare(strict_types=1);
 namespace WPRetriever;
 
 use WPRetriever\Provider\LocalVectorProvider;
-use WPRetriever\Provider\RetrieveResult;
 
 final class SearchInterceptor
 {
+    private const CACHE_VERSION = "2";
     private static array $processed_queries = [];
     /** @var array<int, string> */
     private static array $hit_sources = [];
@@ -146,13 +146,81 @@ final class SearchInterceptor
             $args["s"] = $variant;
             $q = new \WP_Query($args);
             foreach (array_map("intval", $q->posts) as $post_id) {
-                if (!in_array($post_id, $out, true)) {
+                if (
+                    self::core_hit_matches_query($post_id, $variant) &&
+                    !in_array($post_id, $out, true)
+                ) {
                     $out[] = $post_id;
                 }
             }
             wp_reset_postdata();
         }
         return $out;
+    }
+
+    private static function core_hit_matches_query(
+        int $post_id,
+        string $query,
+    ): bool {
+        $tokens = self::ascii_search_tokens($query);
+        if ($tokens === []) {
+            return true;
+        }
+
+        $post = get_post($post_id);
+        if (!($post instanceof \WP_Post)) {
+            return false;
+        }
+
+        $haystack = wp_strip_all_tags(
+            (string) $post->post_title .
+                "\n" .
+                (string) $post->post_excerpt .
+                "\n" .
+                strip_shortcodes((string) $post->post_content),
+            true,
+        );
+        $haystack = html_entity_decode(
+            $haystack,
+            ENT_QUOTES | ENT_HTML5,
+            "UTF-8",
+        );
+        if (function_exists("mb_strtolower")) {
+            $haystack = mb_strtolower($haystack, "UTF-8");
+        } else {
+            $haystack = strtolower($haystack);
+        }
+
+        foreach ($tokens as $token) {
+            if (
+                preg_match(
+                    "/(?<![A-Za-z0-9_])" .
+                        preg_quote($token, "/") .
+                        "(?![A-Za-z0-9_])/",
+                    $haystack,
+                ) !== 1
+            ) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** @return string[] */
+    private static function ascii_search_tokens(string $query): array
+    {
+        if (!preg_match('/^[A-Za-z0-9_\-\s]+$/', $query)) {
+            return [];
+        }
+        preg_match_all("/[A-Za-z0-9_]+/", strtolower($query), $matches);
+        return array_values(
+            array_unique(
+                array_filter(
+                    $matches[0] ?? [],
+                    static fn(string $token): bool => strlen($token) >= 2,
+                ),
+            ),
+        );
     }
 
     private static function merge_ranked_ids(
@@ -309,7 +377,14 @@ final class SearchInterceptor
                 ? self::query_context_fingerprint($source_query)
                 : "";
         return "wp_retriever_q_" .
-            substr(hash("sha256", $query . "|" . $context), 0, 32);
+            substr(
+                hash(
+                    "sha256",
+                    self::CACHE_VERSION . "|" . $query . "|" . $context,
+                ),
+                0,
+                32,
+            );
     }
 
     private static function cache_lookup(

@@ -3,7 +3,7 @@
  * Plugin Name:       WP Retriever
  * Plugin URI:        https://github.com/rioriost/wp-retriever
  * Description:       Native-vector RAG search for WordPress using MariaDB 11.7+ or compatible MySQL 9.x vector indexes. Embeds posts on publish/update and blends vector retrieval with standard WordPress search.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 6.0
  * Tested up to:      6.7
  * Requires PHP:      8.0
@@ -36,7 +36,7 @@ if (version_compare(PHP_VERSION, "8.0.0", "<")) {
     return;
 }
 
-const WP_RETRIEVER_VERSION = "0.1.0";
+const WP_RETRIEVER_VERSION = "0.1.1";
 const WP_RETRIEVER_PLUGIN_FILE = __FILE__;
 const WP_RETRIEVER_OPTION_KEY = "wp_retriever_settings";
 const WP_RETRIEVER_POSTMETA_CONTENT_HASH = "_wp_retriever_content_hash";
