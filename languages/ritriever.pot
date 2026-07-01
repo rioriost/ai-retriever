@@ -122,7 +122,7 @@ msgstr ""
 msgid "Forbidden"
 msgstr ""
 
-msgid "For WordPress AI and Custom HTTP providers, this must match the returned embedding dimensions."
+msgid "For Custom HTTP providers, this must match the returned embedding dimensions."
 msgstr ""
 
 msgid "Full"
@@ -287,9 +287,6 @@ msgstr ""
 msgid "RiTriever"
 msgstr ""
 
-msgid "RiTriever requests this embedding model through the WordPress AI Client. If the site-level AI provider cannot select it, use the OpenAI/Azure OpenAI fallback."
-msgstr ""
-
 msgid "RiTriever requires PHP 8.1 or higher."
 msgstr ""
 
@@ -344,16 +341,13 @@ msgstr ""
 msgid "Upper limit of vector candidates before blending with core WordPress search. Smaller values narrow the retrieval range. Allowed range: 1-200."
 msgstr ""
 
-msgid "Use the WordPress AI Client when the site-level provider exposes embeddings. If text-embedding-3-large is unavailable there, choose OpenAI or Azure OpenAI fallback."
-msgstr ""
-
 msgid "Vector chunks"
 msgstr ""
 
 msgid "Warning"
 msgstr ""
 
-msgid "WordPress AI embedding model"
+msgid "WordPress 7.0 AI Client does not provide embedding generation, so RiTriever uses direct embedding APIs: OpenAI/Azure OpenAI or local/self-hosted endpoints."
 msgstr ""
 
 msgid "yes"

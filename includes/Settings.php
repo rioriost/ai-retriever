@@ -17,8 +17,7 @@ final class Settings
         "sync_enabled" => true,
         "kill_switch_global" => false,
         "target_locale" => "site",
-        "embedding_provider" => "wp_ai_client", // wp_ai_client|openai|azure_openai|ollama|infinity|tei|lmstudio|custom_http.
-        "wp_ai_embedding_model" => "text-embedding-3-large",
+        "embedding_provider" => "openai", // openai|azure_openai|ollama|infinity|tei|lmstudio|custom_http.
         "openai_api_key" => "",
         "openai_embedding_model" => "text-embedding-3-small",
         "custom_embedding_endpoint" => "",
@@ -52,7 +51,6 @@ final class Settings
         "search_mode" => ["off", "a_b_admin", "full"],
         "embedding_provider" => [
             "openai",
-            "wp_ai_client",
             "azure_openai",
             "ollama",
             "infinity",
@@ -182,16 +180,9 @@ final class Settings
         $out["openai_embedding_model"] = self::normalize_openai_embedding_model(
             (string) $out["openai_embedding_model"],
         );
-        $out["wp_ai_embedding_model"] = self::normalize_openai_embedding_model(
-            (string) $out["wp_ai_embedding_model"],
-        );
         if ($out["embedding_provider"] === "openai") {
             $out["embedding_dimensions"] = self::dimensions_for_openai_model(
                 (string) $out["openai_embedding_model"],
-            );
-        } elseif ($out["embedding_provider"] === "wp_ai_client") {
-            $out["embedding_dimensions"] = self::dimensions_for_openai_model(
-                (string) $out["wp_ai_embedding_model"],
             );
         } else {
             $presets = self::custom_embedding_presets();

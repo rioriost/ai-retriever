@@ -73,7 +73,6 @@ final class Plugin
         $schema_keys = [
             "embedding_provider",
             "target_locale",
-            "wp_ai_embedding_model",
             "openai_embedding_model",
             "custom_embedding_model",
             "custom_embedding_preset",

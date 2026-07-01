@@ -20,23 +20,22 @@ Main features:
 
 * RAG-style search blending with standard WordPress search.
 * Native vector storage in the WordPress database.
-* WordPress AI Client support for site-level embedding provider settings.
-* OpenAI and Azure OpenAI fallback support for external embedding APIs.
+* OpenAI and Azure OpenAI support for external embedding APIs.
 * Local or self-hosted embedding support through Ollama, LM Studio, Infinity, TEI, or Custom HTTP endpoints.
 * RAG target language selection from WordPress-supported locales.
 * Admin diagnostics for database support, embedding providers, indexing progress, and live vector queries.
 
-External API use is optional. When an external embedding provider is configured directly, or when WordPress AI Client is configured with an external provider, post content and configured custom field values are sent to that provider to create embeddings.
+External API use is optional. WordPress 7.0 AI Client does not provide embedding generation, so RiTriever uses direct embedding APIs when external embeddings are configured. Post content and configured custom field values are sent to the selected provider to create embeddings.
 
 == External services ==
 
-RiTriever connects to external services only when you select an external embedding provider or when the site-level WordPress AI Client provider is external. It sends post titles, post excerpts, post content chunks, selected taxonomy terms, selected custom field values, and short admin test strings when indexing or testing embeddings. The vectors returned by the provider are stored in your WordPress database.
+RiTriever connects to external services only when you select an external embedding provider. It sends post titles, post excerpts, post content chunks, selected taxonomy terms, selected custom field values, and short admin test strings when indexing or testing embeddings. The vectors returned by the provider are stored in your WordPress database.
 
-WordPress AI Client is provided by WordPress core. RiTriever asks it to generate embeddings using the site owner's configured provider and credentials. Data is sent to whichever AI provider the site owner selected in WordPress AI settings, under that provider's terms and privacy policy.
+WordPress 7.0 includes the WordPress AI Client for supported AI capabilities, but the current AI Client announcement and implementation do not include an embeddings API. Because RiTriever requires text embeddings for vector search, it calls embedding providers directly instead of using WordPress AI Client. Reference: https://make.wordpress.org/core/2026/03/24/introducing-the-ai-client-in-wordpress-7-0/
 
-OpenAI fallback sends embedding requests to OpenAI for `text-embedding-3-small` or `text-embedding-3-large`. This service is provided by OpenAI: Terms of use https://openai.com/policies/terms-of-use/ and Privacy policy https://openai.com/policies/privacy-policy/.
+OpenAI sends embedding requests to OpenAI for `text-embedding-3-small` or `text-embedding-3-large`. This service is provided by OpenAI: Terms of use https://openai.com/policies/terms-of-use/ and Privacy policy https://openai.com/policies/privacy-policy/.
 
-Azure OpenAI fallback sends embedding requests to your configured Azure OpenAI endpoint. This service is provided by Microsoft Azure: Terms of use https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA and Privacy statement https://privacy.microsoft.com/privacystatement.
+Azure OpenAI sends embedding requests to your configured Azure OpenAI endpoint. This service is provided by Microsoft Azure: Terms of use https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA and Privacy statement https://privacy.microsoft.com/privacystatement.
 
 Local or self-hosted endpoints, including Ollama, LM Studio, Infinity, TEI, and Custom HTTP, receive the same embedding inputs when selected. Review the terms, privacy policy, and network location for the endpoint you operate or configure.
 
@@ -54,7 +53,7 @@ Local or self-hosted endpoints, including Ollama, LM Studio, Infinity, TEI, and 
 
 = Which external embedding providers are supported? =
 
-WordPress AI Client is the preferred external provider path. OpenAI and Azure OpenAI remain available as fallback providers when the site-level WordPress AI provider cannot select `text-embedding-3-large`.
+OpenAI and Azure OpenAI are supported as external hosted embedding providers.
 
 = Can I use a local embedding server? =
 
@@ -62,7 +61,7 @@ Yes. Ollama, LM Studio, Infinity, TEI, and Custom HTTP endpoints are available f
 
 = Does this plugin send content to external APIs? =
 
-Only when an external embedding provider is configured directly, or when WordPress AI Client is configured with an external provider. See the External services section for details.
+Only when an external embedding provider is configured. See the External services section for details.
 
 = Does it require native vector database support? =
 
@@ -81,7 +80,7 @@ No screenshots are included in this release.
 = 0.2.0 =
 * Rename the public plugin name and WordPress.org slug to RiTriever.
 * Add RAG target language selection based on WordPress-supported locales.
-* Prefer WordPress AI Client for external embeddings and keep OpenAI/Azure OpenAI fallbacks.
+* Document why direct embedding APIs are used instead of WordPress AI Client.
 * Add WordPress.org release gates for PHPCS, Plugin Check, readme, i18n, and package contents.
 
 == Upgrade Notice ==

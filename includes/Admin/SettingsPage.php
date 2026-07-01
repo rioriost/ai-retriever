@@ -351,12 +351,9 @@ final class SettingsPage
             "error" => $result->error,
             "provider" => (string) Settings::get("embedding_provider"),
             "model" =>
-                (string) Settings::get("embedding_provider") ===
-                "wp_ai_client"
-                    ? (string) Settings::get("wp_ai_embedding_model")
-                    : ((string) Settings::get("embedding_provider") === "openai"
+                (string) Settings::get("embedding_provider") === "openai"
                     ? (string) Settings::get("openai_embedding_model")
-                    : (string) Settings::get("custom_embedding_model")),
+                    : (string) Settings::get("custom_embedding_model"),
             "elapsed_ms" => $elapsed_ms,
             "hits" => [],
         ];
@@ -437,9 +434,6 @@ final class SettingsPage
         $custom_presets = Settings::custom_embedding_presets();
         $custom_preset =
             (string) ($opts["custom_embedding_preset"] ?? "custom");
-        $wp_ai_model = Settings::normalize_openai_embedding_model(
-            (string) $opts["wp_ai_embedding_model"],
-        );
         $model = Settings::normalize_openai_embedding_model(
             (string) $opts["openai_embedding_model"],
         );
@@ -526,7 +520,6 @@ final class SettingsPage
        ); ?>[embedding_provider]">
 								<?php foreach (
             [
-                "wp_ai_client" => "WordPress AI Client",
                 "openai" => "OpenAI",
                 "azure_openai" => "Azure OpenAI",
                 "ollama" => "Ollama",
@@ -545,35 +538,6 @@ final class SettingsPage
 							</select>
 							<p class="description"><?php echo esc_html(
            self::text("embedding_provider_note"),
-       ); ?></p>
-						</td>
-					</tr>
-					<tr data-provider-row="wp_ai_client">
-						<th scope="row"><label for="ritriever-wp-ai-model"><?php echo esc_html(
-          self::text("wp_ai_embedding_model"),
-      ); ?></label></th>
-						<td>
-							<select id="ritriever-wp-ai-model" name="<?php echo esc_attr(
-           RITRIEVER_OPTION_KEY,
-       ); ?>[wp_ai_embedding_model]">
-								<option value="text-embedding-3-small" data-dimensions="1536" <?php selected(
-            $wp_ai_model,
-            "text-embedding-3-small",
-        ); ?>>text-embedding-3-small (1536)</option>
-								<option value="text-embedding-3-large" data-dimensions="3072" <?php selected(
-            $wp_ai_model,
-            "text-embedding-3-large",
-        ); ?> <?php disabled(
-     !$large_supported && $wp_ai_model !== "text-embedding-3-large",
- ); ?>>text-embedding-3-large (3072)</option>
-							</select>
-							<?php if (!$large_supported): ?>
-								<p class="description"><?php echo esc_html(
-            self::text("large_not_supported"),
-        ); ?></p>
-							<?php endif; ?>
-							<p class="description"><?php echo esc_html(
-           self::text("wp_ai_embedding_model_note"),
        ); ?></p>
 						</td>
 					</tr>
@@ -657,7 +621,7 @@ final class SettingsPage
        ); ?></p>
 						</td>
 					</tr>
-					<tr data-provider-row="wp_ai_client azure_openai ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="ritriever-custom-format"><?php echo esc_html(
           self::text("custom_embedding_format"),
       ); ?></label></th>
@@ -1074,7 +1038,7 @@ final class SettingsPage
         $provider = (string) ($opts["embedding_provider"] ?? "");
         echo "<p>" . esc_html(self::text("embedding_test_explain")) . "</p>";
         if (
-            in_array($provider, ["wp_ai_client", "openai", "azure_openai"], true)
+            in_array($provider, ["openai", "azure_openai"], true)
         ) {
             echo '<p class="description"><strong>' .
                 esc_html(self::text("warning")) .
@@ -1466,10 +1430,7 @@ final class SettingsPage
                     "Optional. One taxonomy slug per line or comma-separated, for example category or post_tag.",
                 "embedding_provider" => "Embedding provider",
                 "embedding_provider_note" =>
-                    "Use the WordPress AI Client when the site-level provider exposes embeddings. If text-embedding-3-large is unavailable there, choose OpenAI or Azure OpenAI fallback.",
-                "wp_ai_embedding_model" => "WordPress AI embedding model",
-                "wp_ai_embedding_model_note" =>
-                    "RiTriever requests this embedding model through the WordPress AI Client. If the site-level AI provider cannot select it, use the OpenAI/Azure OpenAI fallback.",
+                    "WordPress 7.0 AI Client does not provide embedding generation, so RiTriever uses direct embedding APIs: OpenAI/Azure OpenAI or local/self-hosted endpoints.",
                 "openai_api_key" => "OpenAI API key",
                 "embedding_model" => "Embedding model",
                 "large_not_supported" =>
@@ -1478,7 +1439,7 @@ final class SettingsPage
                     "Changing the embedding model recreates the vector table and requires initialization again.",
                 "dimensions" => "Dimensions",
                 "dimensions_note" =>
-                    "For WordPress AI and Custom HTTP providers, this must match the returned embedding dimensions.",
+                    "For Custom HTTP providers, this must match the returned embedding dimensions.",
                 "custom_embedding_preset" => "Provider/model preset",
                 "custom_embedding_format" => "Request format",
                 "custom_preset_manual" => "Manual custom HTTP settings",
@@ -1623,11 +1584,7 @@ final class SettingsPage
                     "任意。分類の識別子を1行に1つ、またはカンマ区切りで指定します。例: category, post_tag。",
                 "embedding_provider" => "埋め込みプロバイダー",
                 "embedding_provider_note" =>
-                    "サイト全体のプロバイダーが埋め込みに対応している場合は WordPress AI Client を使います。text-embedding-3-large を選べない場合は OpenAI/Azure OpenAI fallback を選んでください。",
-                "wp_ai_embedding_model" =>
-                    "WordPress AI の埋め込みモデル",
-                "wp_ai_embedding_model_note" =>
-                    "RiTriever はこの埋め込みモデルを WordPress AI Client 経由で要求します。サイト全体の AI プロバイダーで選択できない場合は OpenAI/Azure OpenAI fallback を使ってください。",
+                    "WordPress 7.0 AI Client は埋め込み生成を提供しないため、RiTriever は OpenAI/Azure OpenAI またはローカル/self-hosted endpoint の埋め込み API を直接利用します。",
                 "openai_api_key" => "埋め込み API キー",
                 "embedding_model" => "埋め込みモデル",
                 "large_not_supported" =>
@@ -1636,7 +1593,7 @@ final class SettingsPage
                     "埋め込みモデルを変更するとベクトルテーブルを作り直すため、再初期化が必要です。",
                 "dimensions" => "次元数",
                 "dimensions_note" =>
-                    "WordPress AI と Custom HTTP プロバイダーが返すベクトル次元数に合わせて設定してください。",
+                    "Custom HTTP プロバイダーが返すベクトル次元数に合わせて設定してください。",
                 "custom_embedding_preset" => "プロバイダー/モデル候補",
                 "custom_embedding_format" => "リクエスト形式",
                 "custom_preset_manual" => "手動設定",

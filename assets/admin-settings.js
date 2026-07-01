@@ -3,7 +3,6 @@
 
   var provider = document.getElementById("ritriever-provider");
   var openAiModel = document.getElementById("ritriever-openai-model");
-  var wpAiModel = document.getElementById("ritriever-wp-ai-model");
   var dimensions = document.getElementById("ritriever-dimensions");
   var customPreset = document.getElementById("ritriever-custom-preset");
   var customEndpoint = document.getElementById("ritriever-custom-endpoint");
@@ -12,10 +11,6 @@
   var providerRows = document.querySelectorAll("[data-provider-row]");
   var normalization = document.getElementById("ritriever-japanese-normalization");
   var normalizationRows = document.querySelectorAll("[data-normalization-row]");
-
-  function selectedModel() {
-    return provider && provider.value === "wp_ai_client" ? wpAiModel : openAiModel;
-  }
 
   function syncProviderRows() {
     if (!provider) {
@@ -45,9 +40,8 @@
         customPreset.value = firstVisible.value;
       }
     }
-    var model = selectedModel();
-    if ((provider.value === "openai" || provider.value === "wp_ai_client") && model && dimensions) {
-      var option = model.options[model.selectedIndex];
+    if (provider.value === "openai" && openAiModel && dimensions) {
+      var option = openAiModel.options[openAiModel.selectedIndex];
       dimensions.value =
         option && option.getAttribute("data-dimensions")
           ? option.getAttribute("data-dimensions")
@@ -89,9 +83,6 @@
   }
   if (openAiModel) {
     openAiModel.addEventListener("change", syncProviderRows);
-  }
-  if (wpAiModel) {
-    wpAiModel.addEventListener("change", syncProviderRows);
   }
   if (normalization) {
     normalization.addEventListener("change", syncNormalizationRows);

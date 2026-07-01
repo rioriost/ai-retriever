@@ -57,6 +57,7 @@ release-audit:
 review-audit:
 	! grep -RInE 'WPRetriever|WP_RETRIEVER|wp_retriever|wp-retriever|wpRetriever|AI Retriever|ai-retriever' -- $(PLUGIN_FILE) uninstall.php includes assets languages readme.txt README.md composer.json phpcs-security.xml.dist scripts
 	! grep -RInE '<script[[:space:]>]' -- $(PLUGIN_FILE) uninstall.php includes
+	! grep -RInE 'wp_ai_client|WordPressAiEmbeddingProvider|generate_embeddings' -- $(PLUGIN_FILE) uninstall.php includes assets
 	grep -RIn 'wp_remote_post("https://api.openai.com/v1/embeddings"' includes/Embedding >/dev/null
 	grep -RIn '^== External services ==$$' readme.txt >/dev/null
 

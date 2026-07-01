@@ -10,9 +10,6 @@ final class EmbeddingProviderFactory
     public static function make(): EmbeddingProviderInterface
     {
         $provider = (string) Settings::get("embedding_provider");
-        if ($provider === "wp_ai_client") {
-            return new WordPressAiEmbeddingProvider();
-        }
         if ($provider === "openai") {
             return new OpenAiEmbeddingProvider();
         }
