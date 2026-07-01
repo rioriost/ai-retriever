@@ -16,7 +16,7 @@ MariaDB 11.7 introduces:
 Initial DDL target:
 
 ```sql
-CREATE TABLE wp_retriever_chunks (
+CREATE TABLE ritriever_chunks (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   post_id BIGINT UNSIGNED NOT NULL,
   chunk_index INT UNSIGNED NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE wp_retriever_chunks (
 
 ### MySQL 9.x
 
-MySQL 9.x vector support must be validated per target. The scaffold treats MySQL 9.x as a capability candidate, but native vector search is disabled by default. Enable experiments with the `wp_retriever_mysql_vector_enabled` filter and provide exact DDL through `wp_retriever_mysql_vector_create_table_sql` only after validating the target server.
+MySQL 9.x vector support must be validated per target. The scaffold treats MySQL 9.x as a capability candidate, but native vector search is disabled by default. Enable experiments with the `ritriever_mysql_vector_enabled` filter and provide exact DDL through `ritriever_mysql_vector_create_table_sql` only after validating the target server.
 
 Before declaring production support for a MySQL target, verify:
 

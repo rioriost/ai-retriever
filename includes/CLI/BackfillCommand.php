@@ -2,21 +2,21 @@
 /**
  * WP-CLI commands.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\CLI;
+namespace RiTriever\CLI;
 
-use WPRetriever\BackfillRunner;
+use RiTriever\BackfillRunner;
 
 final class BackfillCommand
 {
     public static function register(): void
     {
         if (class_exists("\\WP_CLI")) {
-            \WP_CLI::add_command("retriever backfill", [
+            \WP_CLI::add_command("ritriever backfill", [
                 self::class,
                 "backfill",
             ]);
@@ -24,7 +24,7 @@ final class BackfillCommand
     }
 
     /**
-     * Manage the AI Retriever background indexing queue.
+     * Manage the RiTriever background indexing queue.
      *
      * ## OPTIONS
      *

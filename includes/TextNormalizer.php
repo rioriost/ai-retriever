@@ -2,12 +2,12 @@
 /**
  * Query normalization helpers.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 final class TextNormalizer
 {

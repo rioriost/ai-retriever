@@ -1,4 +1,4 @@
-# WP Retriever Architecture Plan
+# RiTriever Architecture Plan
 
 ## Goal
 
@@ -8,7 +8,7 @@ Create a separate WordPress plugin that performs native-database semantic retrie
 
 1. **Settings**
    - Search mode: `off`, `shadow`, `a_b_admin`, `full`.
-   - Embedding provider: OpenAI or custom HTTP endpoint.
+   - Embedding provider: WordPress AI Client, OpenAI/Azure OpenAI fallback, or local/custom HTTP endpoint.
    - Embedding dimensions/model.
    - Native vector index parameters: distance (`cosine` or `euclidean`) and `M`.
    - Badge display option.

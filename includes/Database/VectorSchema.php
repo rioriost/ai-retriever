@@ -2,17 +2,17 @@
 /**
  * Native vector table schema.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\Database;
+namespace RiTriever\Database;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR DDL and index maintenance require explicit database statements with internally controlled identifiers/settings.
 
-use WPRetriever\Logger;
-use WPRetriever\Settings;
+use RiTriever\Logger;
+use RiTriever\Settings;
 
 final class VectorSchema
 {
@@ -21,7 +21,7 @@ final class VectorSchema
     public static function table_name(): string
     {
         global $wpdb;
-        return $wpdb->prefix . "retriever_chunks";
+        return $wpdb->prefix . "ritriever_chunks";
     }
 
     public static function recreate(): void
@@ -119,7 +119,7 @@ final class VectorSchema
             // MySQL 9.x vector DDL is intentionally filterable until the exact target
             // server/index syntax is validated. The default mirrors the logical schema.
             $sql = apply_filters(
-                "wp_retriever_mysql_vector_create_table_sql",
+                "ritriever_mysql_vector_create_table_sql",
                 "",
                 $table,
                 $dim,

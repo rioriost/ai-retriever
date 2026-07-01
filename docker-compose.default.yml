@@ -4,14 +4,14 @@ services:
     working_dir: /app
     command: php -S 0.0.0.0:8080 /app/server.php
     environment:
-      EMBEDDING_DIMENSIONS: ${RETRIEVER_EMBEDDING_DIMENSIONS:-16}
+      EMBEDDING_DIMENSIONS: ${RITRIEVER_EMBEDDING_DIMENSIONS:-16}
     ports:
-      - "${RETRIEVER_EMBEDDING_PORT:-18080}:8080"
+      - "${RITRIEVER_EMBEDDING_PORT:-18080}:8080"
     volumes:
       - ./docker/embedding-mock:/app:ro
 
   db-mariadb:
-    image: mariadb:${RETRIEVER_MARIADB_VERSION:-11.8}
+    image: mariadb:${RITRIEVER_MARIADB_VERSION:-11.8}
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -21,7 +21,7 @@ services:
       MARIADB_PASSWORD: wordpress
       MARIADB_ROOT_PASSWORD: root
     ports:
-      - "${RETRIEVER_MARIADB_PORT:-33071}:3306"
+      - "${RITRIEVER_MARIADB_PORT:-33071}:3306"
     healthcheck:
       test:
         [
@@ -32,7 +32,7 @@ services:
       timeout: 3s
       retries: 30
     volumes:
-      - retriever_default_mariadb_data:/var/lib/mysql
+      - ritriever_default_mariadb_data:/var/lib/mysql
 
   wp-mariadb:
     image: wordpress:php8.3-apache
@@ -51,9 +51,9 @@ services:
         define( 'WP_DEBUG_LOG', true );
         define( 'WP_DEBUG_DISPLAY', false );
     ports:
-      - "${RETRIEVER_WP_MARIADB_PORT:-8081}:80"
+      - "${RITRIEVER_WP_MARIADB_PORT:-8081}:80"
     volumes:
-      - retriever_default_wp_mariadb_html:/var/www/html
+      - ritriever_default_wp_mariadb_html:/var/www/html
 
   wpcli-mariadb:
     image: wordpress:cli-php8.3
@@ -68,11 +68,11 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     volumes:
-      - retriever_default_wp_mariadb_html:/var/www/html
+      - ritriever_default_wp_mariadb_html:/var/www/html
     profiles: ["tools"]
 
   db-mysql:
-    image: mysql:${RETRIEVER_MYSQL_VERSION:-9.4}
+    image: mysql:${RITRIEVER_MYSQL_VERSION:-9.4}
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -82,7 +82,7 @@ services:
       MYSQL_PASSWORD: wordpress
       MYSQL_ROOT_PASSWORD: root
     ports:
-      - "${RETRIEVER_MYSQL_PORT:-33072}:3306"
+      - "${RITRIEVER_MYSQL_PORT:-33072}:3306"
     healthcheck:
       test:
         [
@@ -93,7 +93,7 @@ services:
       timeout: 3s
       retries: 30
     volumes:
-      - retriever_default_mysql_data:/var/lib/mysql
+      - ritriever_default_mysql_data:/var/lib/mysql
 
   wp-mysql:
     image: wordpress:php8.3-apache
@@ -112,9 +112,9 @@ services:
         define( 'WP_DEBUG_LOG', true );
         define( 'WP_DEBUG_DISPLAY', false );
     ports:
-      - "${RETRIEVER_WP_MYSQL_PORT:-8082}:80"
+      - "${RITRIEVER_WP_MYSQL_PORT:-8082}:80"
     volumes:
-      - retriever_default_wp_mysql_html:/var/www/html
+      - ritriever_default_wp_mysql_html:/var/www/html
 
   wpcli-mysql:
     image: wordpress:cli-php8.3
@@ -129,11 +129,11 @@ services:
       WORDPRESS_DB_USER: wordpress
       WORDPRESS_DB_PASSWORD: wordpress
     volumes:
-      - retriever_default_wp_mysql_html:/var/www/html
+      - ritriever_default_wp_mysql_html:/var/www/html
     profiles: ["tools"]
 
 volumes:
-  retriever_default_mariadb_data:
-  retriever_default_mysql_data:
-  retriever_default_wp_mariadb_html:
-  retriever_default_wp_mysql_html:
+  ritriever_default_mariadb_data:
+  ritriever_default_mysql_data:
+  ritriever_default_wp_mariadb_html:
+  ritriever_default_wp_mysql_html:

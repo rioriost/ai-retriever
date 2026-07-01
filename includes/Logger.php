@@ -2,16 +2,16 @@
 /**
  * Small bounded logger stored in one option row.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 final class Logger
 {
-    private const OPTION = "wp_retriever_log";
+    private const OPTION = "ritriever_log";
     private const LIMIT = 200;
     private const LEVELS = [
         "debug" => 10,

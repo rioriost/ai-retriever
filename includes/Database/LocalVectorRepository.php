@@ -2,16 +2,16 @@
 /**
  * Database access for native vector chunks.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\Database;
+namespace RiTriever\Database;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR inserts/searches need explicit SQL for VEC_FromText and distance functions with vetted identifiers.
 
-use WPRetriever\Settings;
+use RiTriever\Settings;
 
 final class LocalVectorRepository
 {

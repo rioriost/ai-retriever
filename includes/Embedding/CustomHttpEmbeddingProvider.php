@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetriever\Embedding;
+namespace RiTriever\Embedding;
 
-use WPRetriever\Settings;
+use RiTriever\Settings;
 
 final class CustomHttpEmbeddingProvider implements EmbeddingProviderInterface
 {

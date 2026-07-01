@@ -3,7 +3,7 @@
  * Deterministic embedding mock for local Docker smoke tests.
  *
  * Accepts POST JSON: {"input": "text"} or {"input": ["text", ...]}
- * Returns: {"embeddings": [[...]], "model": "retriever-mock-N"}
+ * Returns: {"embeddings": [[...]], "model": "ritriever-mock-N"}
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ foreach ($texts as $text) {
 }
 
 json_response([
-    "model" => "retriever-mock-" . $dim,
+    "model" => "ritriever-mock-" . $dim,
     "embeddings" => $embeddings,
 ]);
 

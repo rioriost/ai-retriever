@@ -2,20 +2,22 @@
 /**
  * Hybrid RAG + core search rewrite.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching -- Query cache purging needs to enumerate matching transient option rows before deleting them through WordPress APIs.
 
-use WPRetriever\Provider\LocalVectorProvider;
+use RiTriever\Provider\LocalVectorProvider;
 
 final class SearchInterceptor
 {
     private const CACHE_VERSION = "2";
+    private const CACHE_INDEX_OPTION = "ritriever_query_cache_keys";
+    private const CACHE_MAX_ENTRIES = 100;
     private static array $processed_queries = [];
     /** @var array<int, string> */
     private static array $hit_sources = [];
@@ -48,7 +50,7 @@ final class SearchInterceptor
         if (
             $user_query === "" ||
             !Settings::should_intercept_search(
-                current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY),
+                current_user_can((string) RITRIEVER_ADMIN_CAPABILITY),
             )
         ) {
             self::$processed_queries[$qid] = "skipped";
@@ -112,12 +114,14 @@ final class SearchInterceptor
             !(bool) Settings::get("display_source_badges") ||
             !is_string($title) ||
             $title === "" ||
-            str_contains($title, "wp-retriever-hit-badges")
+            str_contains($title, "ritriever-hit-badges")
         ) {
             return (string) $title;
         }
         $source = self::source_for_render_post((int) $post_id);
-        return $source === null ? $title : self::badge_html($source) . $title;
+        return $source === null
+            ? (string) $title
+            : self::badge_html($source) . esc_html((string) $title);
     }
 
     private static function core_search_ids(
@@ -368,7 +372,7 @@ final class SearchInterceptor
             $labels[] = self::standard_search_label();
         }
         $html =
-            '<span class="wp-retriever-hit-badges" style="display:block;font-size:.72em;font-weight:400;line-height:1.4;margin:0 0 .15em;color:#666;">';
+            '<span class="ritriever-hit-badges" style="display:block;font-size:.72em;font-weight:400;line-height:1.4;margin:0 0 .15em;color:#666;">';
         foreach ($labels as $label) {
             $html .=
                 '<span style="display:inline-block;margin-right:.35em;">[' .
@@ -381,7 +385,7 @@ final class SearchInterceptor
     private static function standard_search_label(): string
     {
         $english = "Standard search";
-        $translated = get_translations_for_domain("ai-retriever")->translate(
+        $translated = get_translations_for_domain("ritriever")->translate(
             $english,
         );
         if (
@@ -401,7 +405,7 @@ final class SearchInterceptor
             $source_query instanceof \WP_Query
                 ? self::query_context_fingerprint($source_query)
                 : "";
-        return "wp_retriever_q_" .
+        return "ritriever_q_" .
             substr(
                 hash(
                     "sha256",
@@ -434,11 +438,26 @@ final class SearchInterceptor
         array $sources,
         \WP_Query $source_query,
     ): void {
+        $key = self::cache_key($query, $source_query);
         set_transient(
-            self::cache_key($query, $source_query),
+            $key,
             ["ids" => $ids, "sources" => $sources],
             (int) Settings::get("cache_ttl_seconds"),
         );
+        self::remember_cache_key($key);
+    }
+
+    private static function remember_cache_key(string $key): void
+    {
+        $raw = get_option(self::CACHE_INDEX_OPTION, []);
+        $index = is_array($raw) ? $raw : [];
+        $index[$key] = time();
+        arsort($index);
+        $kept = array_slice($index, 0, self::CACHE_MAX_ENTRIES, true);
+        foreach (array_diff(array_keys($index), array_keys($kept)) as $stale) {
+            delete_transient((string) $stale);
+        }
+        update_option(self::CACHE_INDEX_OPTION, $kept, false);
     }
 
     private static function query_context_fingerprint(
@@ -480,7 +499,7 @@ final class SearchInterceptor
     {
         global $wpdb;
 
-        $prefix = "wp_retriever_q_";
+        $prefix = "ritriever_q_";
         $transient_like = $wpdb->esc_like("_transient_" . $prefix) . "%";
         $timeout_like = $wpdb->esc_like("_transient_timeout_" . $prefix) . "%";
 
@@ -517,6 +536,7 @@ final class SearchInterceptor
         foreach ($keys as $key) {
             delete_transient($key);
         }
+        delete_option(self::CACHE_INDEX_OPTION);
 
         return count($keys);
     }

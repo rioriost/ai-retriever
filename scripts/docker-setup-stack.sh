@@ -8,24 +8,24 @@ if [ "$STACK" != "mariadb" ] && [ "$STACK" != "mysql" ]; then
 fi
 
 COMPOSE="${COMPOSE:-docker compose}"
-HOST="${RETRIEVER_HOST:-192.168.1.35}"
-DIMENSIONS="${RETRIEVER_EMBEDDING_DIMENSIONS:-16}"
-ADMIN_USER="${RETRIEVER_ADMIN_USER:-admin}"
-ADMIN_PASSWORD="${RETRIEVER_ADMIN_PASSWORD:-password}"
-ADMIN_EMAIL="${RETRIEVER_ADMIN_EMAIL:-admin@example.test}"
+HOST="${RITRIEVER_HOST:-192.168.1.35}"
+DIMENSIONS="${RITRIEVER_EMBEDDING_DIMENSIONS:-16}"
+ADMIN_USER="${RITRIEVER_ADMIN_USER:-admin}"
+ADMIN_PASSWORD="${RITRIEVER_ADMIN_PASSWORD:-password}"
+ADMIN_EMAIL="${RITRIEVER_ADMIN_EMAIL:-admin@example.test}"
 
 if [ "$STACK" = "mariadb" ]; then
   WP_SERVICE="wp-mariadb"
   WPCLI_SERVICE="wpcli-mariadb"
   DB_SERVICE="db-mariadb"
-  PORT="${RETRIEVER_WP_MARIADB_PORT:-8081}"
+  PORT="${RITRIEVER_WP_MARIADB_PORT:-8081}"
   SEARCH_MODE="full"
   SYNC_ENABLED="true"
 else
   WP_SERVICE="wp-mysql"
   WPCLI_SERVICE="wpcli-mysql"
   DB_SERVICE="db-mysql"
-  PORT="${RETRIEVER_WP_MYSQL_PORT:-8082}"
+  PORT="${RITRIEVER_WP_MYSQL_PORT:-8082}"
   SEARCH_MODE="off"
   SYNC_ENABLED="false"
 fi
@@ -56,7 +56,7 @@ done
 if ! run_wp core is-installed >/dev/null 2>&1; then
   run_wp core install \
     --url="$URL" \
-    --title="AI Retriever ${STACK}" \
+    --title="RiTriever ${STACK}" \
     --admin_user="$ADMIN_USER" \
     --admin_password="$ADMIN_PASSWORD" \
     --admin_email="$ADMIN_EMAIL" \
@@ -65,15 +65,15 @@ fi
 
 # Write settings before activation so the activation-created vector table uses
 # the same dimensions as the local embedding mock.
-run_wp plugin deactivate ai-retriever >/dev/null 2>&1 || true
-run_wp option update wp_retriever_settings "$SETTINGS_JSON" --format=json >/dev/null
-run_wp plugin activate ai-retriever
+run_wp plugin deactivate ritriever >/dev/null 2>&1 || true
+run_wp option update ritriever_settings "$SETTINGS_JSON" --format=json >/dev/null
+run_wp plugin activate ritriever
 
 run_wp post create \
   --post_type=post \
   --post_status=publish \
   --post_title="MariaDB vector search smoke test" \
-  --post_content="AI Retriever stores local embeddings in a native database vector column and blends semantic retrieval with standard WordPress search." \
+  --post_content="RiTriever stores local embeddings in a native database vector column and blends semantic retrieval with standard WordPress search." \
   >/dev/null
 
 run_wp post create \

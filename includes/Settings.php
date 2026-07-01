@@ -2,22 +2,23 @@
 /**
  * Settings schema and sanitization.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 final class Settings
 {
     public const DEFAULTS = [
-        "schema_version" => WP_RETRIEVER_VERSION,
+        "schema_version" => RITRIEVER_VERSION,
         "search_mode" => "off", // off|a_b_admin|full.
         "sync_enabled" => true,
         "kill_switch_global" => false,
         "target_locale" => "site",
-        "embedding_provider" => "openai", // openai|azure_openai|ollama|infinity|tei|lmstudio|custom_http.
+        "embedding_provider" => "wp_ai_client", // wp_ai_client|openai|azure_openai|ollama|infinity|tei|lmstudio|custom_http.
+        "wp_ai_embedding_model" => "text-embedding-3-large",
         "openai_api_key" => "",
         "openai_embedding_model" => "text-embedding-3-small",
         "custom_embedding_endpoint" => "",
@@ -51,6 +52,7 @@ final class Settings
         "search_mode" => ["off", "a_b_admin", "full"],
         "embedding_provider" => [
             "openai",
+            "wp_ai_client",
             "azure_openai",
             "ollama",
             "infinity",
@@ -87,7 +89,7 @@ final class Settings
         if (self::$cache !== null) {
             return self::$cache;
         }
-        $stored = get_option(WP_RETRIEVER_OPTION_KEY, []);
+        $stored = get_option(RITRIEVER_OPTION_KEY, []);
         if (!is_array($stored)) {
             $stored = [];
         }
@@ -103,13 +105,13 @@ final class Settings
 
     public static function install_or_upgrade(): void
     {
-        $current = get_option(WP_RETRIEVER_OPTION_KEY, []);
+        $current = get_option(RITRIEVER_OPTION_KEY, []);
         if (!is_array($current)) {
             $current = [];
         }
-        $current["schema_version"] = WP_RETRIEVER_VERSION;
+        $current["schema_version"] = RITRIEVER_VERSION;
         update_option(
-            WP_RETRIEVER_OPTION_KEY,
+            RITRIEVER_OPTION_KEY,
             self::sanitize(array_replace(self::DEFAULTS, $current)),
             false,
         );
@@ -118,7 +120,7 @@ final class Settings
 
     public static function sanitize(array $raw): array
     {
-        $stored = get_option(WP_RETRIEVER_OPTION_KEY, []);
+        $stored = get_option(RITRIEVER_OPTION_KEY, []);
         $base = array_replace(self::DEFAULTS, is_array($stored) ? $stored : []);
         $out = $base;
         foreach (self::DEFAULTS as $key => $default) {
@@ -180,9 +182,16 @@ final class Settings
         $out["openai_embedding_model"] = self::normalize_openai_embedding_model(
             (string) $out["openai_embedding_model"],
         );
+        $out["wp_ai_embedding_model"] = self::normalize_openai_embedding_model(
+            (string) $out["wp_ai_embedding_model"],
+        );
         if ($out["embedding_provider"] === "openai") {
             $out["embedding_dimensions"] = self::dimensions_for_openai_model(
                 (string) $out["openai_embedding_model"],
+            );
+        } elseif ($out["embedding_provider"] === "wp_ai_client") {
+            $out["embedding_dimensions"] = self::dimensions_for_openai_model(
+                (string) $out["wp_ai_embedding_model"],
             );
         } else {
             $presets = self::custom_embedding_presets();
@@ -228,7 +237,7 @@ final class Settings
         );
         $out["vector_index_m"] = max(3, min(200, (int) $out["vector_index_m"]));
         $out["top_k"] = max(1, min(200, (int) $out["top_k"]));
-        $out["schema_version"] = WP_RETRIEVER_VERSION;
+        $out["schema_version"] = RITRIEVER_VERSION;
 
         return $out;
     }
@@ -266,7 +275,7 @@ final class Settings
             (int) ($result["errors"] ?? 0),
         );
         $current["initial_backfill_reset_reason"] = "";
-        update_option(WP_RETRIEVER_OPTION_KEY, self::sanitize($current), false);
+        update_option(RITRIEVER_OPTION_KEY, self::sanitize($current), false);
         self::$cache = null;
     }
 
@@ -277,7 +286,7 @@ final class Settings
         $current["initial_backfill_processed"] = 0;
         $current["initial_backfill_errors"] = 0;
         $current["initial_backfill_reset_reason"] = $reason;
-        update_option(WP_RETRIEVER_OPTION_KEY, self::sanitize($current), false);
+        update_option(RITRIEVER_OPTION_KEY, self::sanitize($current), false);
         self::$cache = null;
     }
 

@@ -2,12 +2,12 @@
 /**
  * Runtime detection for native vector support.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\Database;
+namespace RiTriever\Database;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Capability probes intentionally create and query a temporary VECTOR table with internally controlled SQL fragments.
 
@@ -45,7 +45,7 @@ final class VectorCapabilities
             // point for dialect experiments.
             $mysql_enabled = function_exists("apply_filters")
                 ? (bool) apply_filters(
-                    "wp_retriever_mysql_vector_enabled",
+                    "ritriever_mysql_vector_enabled",
                     false,
                     $raw,
                     $version,
@@ -54,7 +54,7 @@ final class VectorCapabilities
             $native = $mysql_enabled;
             $index = $mysql_enabled;
             $reason = $mysql_enabled
-                ? "MySQL 9.x vector support enabled by wp_retriever_mysql_vector_enabled filter; verify exact index syntax"
+                ? "MySQL 9.x vector support enabled by ritriever_mysql_vector_enabled filter; verify exact index syntax"
                 : "MySQL 9.x vector capability candidate; disabled until dialect is verified";
         }
 
@@ -96,7 +96,7 @@ final class VectorCapabilities
             return $result;
         }
 
-        $table = $wpdb->prefix . "retriever_vector_probe";
+        $table = $wpdb->prefix . "ritriever_vector_probe";
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
         $wpdb->query("DROP TABLE IF EXISTS {$table}");
 
@@ -174,7 +174,7 @@ final class VectorCapabilities
         if (!$cap["native_vector"]) {
             return 0;
         }
-        // AI Retriever currently caps vectors at 4096 dimensions. That covers
+        // RiTriever currently caps vectors at 4096 dimensions. That covers
         // OpenAI text-embedding-3-large (3072) while keeping schema changes
         // conservative for native database vector indexes.
         return $cap["family"] === "mariadb" ? 4096 : 0;

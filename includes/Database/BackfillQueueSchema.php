@@ -2,16 +2,16 @@
 /**
  * Dedicated tables for initial backfill jobs and queue items.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\Database;
+namespace RiTriever\Database;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom queue table schema lifecycle requires explicit DDL with internally controlled table names.
 
-use WPRetriever\Logger;
+use RiTriever\Logger;
 
 final class BackfillQueueSchema
 {
@@ -20,13 +20,13 @@ final class BackfillQueueSchema
     public static function jobs_table(): string
     {
         global $wpdb;
-        return $wpdb->prefix . "retriever_backfill_jobs";
+        return $wpdb->prefix . "ritriever_backfill_jobs";
     }
 
     public static function items_table(): string
     {
         global $wpdb;
-        return $wpdb->prefix . "retriever_backfill_items";
+        return $wpdb->prefix . "ritriever_backfill_items";
     }
 
     public static function install_or_upgrade(): void

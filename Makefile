@@ -1,14 +1,14 @@
-PLUGIN_SLUG := ai-retriever
-PLUGIN_FILE := ai-retriever.php
+PLUGIN_SLUG := ritriever
+PLUGIN_FILE := ritriever.php
 PLUGIN_VERSION := $(shell awk -F ': *' '/^ \* Version:/ { print $$2; exit }' $(PLUGIN_FILE))
 BUILD_DIR := build
 DIST_DIR := dist
 RELEASE_DIR := $(BUILD_DIR)/$(PLUGIN_SLUG)
 ZIP_FILE := $(DIST_DIR)/$(PLUGIN_SLUG)-$(PLUGIN_VERSION).zip
-PHP_FILES := ai-retriever.php uninstall.php includes
+PHP_FILES := ritriever.php uninstall.php includes
 POT_FILE := languages/$(PLUGIN_SLUG).pot
 
-.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check i18n-pot i18n-pot-check release-audit package-audit clean package release
+.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check i18n-pot i18n-pot-check release-audit review-audit package-audit clean package release
 
 help:
 	@echo "Targets:"
@@ -48,12 +48,19 @@ i18n-pot-check:
 	tmp="$$(mktemp)"; php scripts/build-pot.php "$$tmp"; diff -u $(POT_FILE) "$$tmp"; rm -f "$$tmp"
 
 release-audit:
-	grep -q '^ \* Plugin Name:       AI Retriever$$' $(PLUGIN_FILE)
+	grep -q '^ \* Plugin Name:       RiTriever$$' $(PLUGIN_FILE)
 	grep -q '^Stable tag: $(PLUGIN_VERSION)$$' readme.txt
 	test -f $(POT_FILE)
 	test -f readme.txt
+	grep -q '^== External services ==$$' readme.txt
 
-static-check: composer-validate lint phpcs-security composer-audit compose-config i18n-pot-check release-audit
+review-audit:
+	! grep -RInE 'WPRetriever|WP_RETRIEVER|wp_retriever|wp-retriever|wpRetriever|AI Retriever|ai-retriever' -- $(PLUGIN_FILE) uninstall.php includes assets languages readme.txt README.md composer.json phpcs-security.xml.dist scripts
+	! grep -RInE '<script[[:space:]>]' -- $(PLUGIN_FILE) uninstall.php includes
+	grep -RIn 'wp_remote_post("https://api.openai.com/v1/embeddings"' includes/Embedding >/dev/null
+	grep -RIn '^== External services ==$$' readme.txt >/dev/null
+
+static-check: composer-validate lint phpcs-security composer-audit compose-config i18n-pot-check release-audit review-audit
 
 check: static-check clean package package-audit plugin-check
 

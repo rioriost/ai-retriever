@@ -1,8 +1,8 @@
 <?php
 /**
- * Uninstall cleanup for AI Retriever.
+ * Uninstall cleanup for RiTriever.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
@@ -14,25 +14,26 @@ if (!defined("WP_UNINSTALL_PLUGIN")) {
 }
 
 /**
- * Remove all AI Retriever data for the current site.
+ * Remove all RiTriever data for the current site.
  */
-function wp_retriever_uninstall_site(): void
+function ritriever_uninstall_site(): void
 {
     global $wpdb;
 
-    wp_retriever_unschedule_site_cron();
+    ritriever_unschedule_site_cron();
 
-    delete_option("wp_retriever_settings");
-    delete_option("wp_retriever_backfill_queue");
-    delete_option("wp_retriever_log");
+    delete_option("ritriever_settings");
+    delete_option("ritriever_backfill_queue");
+    delete_option("ritriever_query_cache_keys");
+    delete_option("ritriever_log");
 
-    wp_retriever_delete_transients("wp_retriever_q_");
-    wp_retriever_delete_transients("wp_retriever_live_query_");
+    ritriever_delete_transients("ritriever_q_");
+    ritriever_delete_transients("ritriever_live_query_");
 
     $postmeta_keys = [
-        "_wp_retriever_content_hash",
-        "_wp_retriever_indexed_at",
-        "_wp_retriever_last_error",
+        "_ritriever_content_hash",
+        "_ritriever_indexed_at",
+        "_ritriever_last_error",
     ];
     $placeholders = implode(",", array_fill(0, count($postmeta_keys), "%s"));
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
@@ -43,12 +44,12 @@ function wp_retriever_uninstall_site(): void
         ),
     );
 
-    $table = $wpdb->prefix . "retriever_chunks";
+    $table = $wpdb->prefix . "ritriever_chunks";
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
     $wpdb->query("DROP TABLE IF EXISTS {$table}");
 
-    $queue_items_table = $wpdb->prefix . "retriever_backfill_items";
-    $queue_jobs_table = $wpdb->prefix . "retriever_backfill_jobs";
+    $queue_items_table = $wpdb->prefix . "ritriever_backfill_items";
+    $queue_jobs_table = $wpdb->prefix . "ritriever_backfill_jobs";
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
     $wpdb->query("DROP TABLE IF EXISTS {$queue_items_table}");
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
@@ -56,9 +57,9 @@ function wp_retriever_uninstall_site(): void
 }
 
 /**
- * Remove AI Retriever transients for the current site.
+ * Remove RiTriever transients for the current site.
  */
-function wp_retriever_delete_transients(string $prefix): void
+function ritriever_delete_transients(string $prefix): void
 {
     global $wpdb;
 
@@ -91,11 +92,11 @@ function wp_retriever_delete_transients(string $prefix): void
 }
 
 /**
- * Remove pending AI Retriever cron events for the current site.
+ * Remove pending RiTriever cron events for the current site.
  */
-function wp_retriever_unschedule_site_cron(): void
+function ritriever_unschedule_site_cron(): void
 {
-    $hook = "wp_retriever_process_backfill_queue";
+    $hook = "ritriever_process_backfill_queue";
     $timestamp = wp_next_scheduled($hook);
     while ($timestamp) {
         wp_unschedule_event($timestamp, $hook);
@@ -110,9 +111,9 @@ if (is_multisite()) {
     ]);
     foreach ($site_ids as $site_id) {
         switch_to_blog((int) $site_id);
-        wp_retriever_uninstall_site();
+        ritriever_uninstall_site();
         restore_current_blog();
     }
 } else {
-    wp_retriever_uninstall_site();
+    ritriever_uninstall_site();
 }

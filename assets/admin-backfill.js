@@ -1,21 +1,21 @@
 (function () {
   "use strict";
 
-  var config = window.wpRetrieverBackfill || null;
+  var config = window.ritrieverBackfill || null;
   if (!config) {
     return;
   }
 
-  var root = document.getElementById("wp-retriever-backfill-progress");
+  var root = document.getElementById("ritriever-backfill-progress");
   if (!root) {
     return;
   }
 
-  var statusText = root.querySelector("[data-wp-retriever-status-text]");
-  var detailText = root.querySelector("[data-wp-retriever-detail-text]");
-  var bar = root.querySelector("[data-wp-retriever-progress-bar]");
-  var percentText = root.querySelector("[data-wp-retriever-percent]");
-  var controls = root.querySelectorAll("[data-wp-retriever-control]");
+  var statusText = root.querySelector("[data-ritriever-status-text]");
+  var detailText = root.querySelector("[data-ritriever-detail-text]");
+  var bar = root.querySelector("[data-ritriever-progress-bar]");
+  var percentText = root.querySelector("[data-ritriever-percent]");
+  var controls = root.querySelectorAll("[data-ritriever-control]");
   var activeWorkers = 0;
   var stopped = false;
   var currentStatus = "idle";
@@ -29,7 +29,7 @@
 
   function setControlStates(status) {
     Array.prototype.forEach.call(controls, function (button) {
-      var action = button.getAttribute("data-wp-retriever-control");
+      var action = button.getAttribute("data-ritriever-control");
       if (action === "pause") {
         button.disabled = !(status === "queued" || status === "running");
       } else if (action === "resume") {
@@ -137,7 +137,7 @@
     activeWorkers += 1;
     setMessage(config.i18n.running);
 
-    request("wp_retriever_backfill_run")
+    request("ritriever_backfill_run")
       .then(function (state) {
         activeWorkers -= 1;
         consecutiveErrors = 0;
@@ -186,7 +186,7 @@
       consecutiveErrors = 0;
     }
 
-    request("wp_retriever_backfill_" + action)
+    request("ritriever_backfill_" + action)
       .then(function (state) {
         updateProgress(state);
         if (action === "pause" || action === "cancel") {
@@ -206,11 +206,11 @@
 
   Array.prototype.forEach.call(controls, function (button) {
     button.addEventListener("click", function () {
-      control(button.getAttribute("data-wp-retriever-control"));
+      control(button.getAttribute("data-ritriever-control"));
     });
   });
 
-  request("wp_retriever_backfill_status")
+  request("ritriever_backfill_status")
     .then(function (state) {
       updateProgress(state);
       if (config.autoStart && isRunnable(state.status)) {

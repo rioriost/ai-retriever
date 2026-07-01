@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetriever\Provider;
+namespace RiTriever\Provider;
 
-use WPRetriever\Database\LocalVectorRepository;
-use WPRetriever\Embedding\EmbeddingProviderFactory;
-use WPRetriever\LanguageOptions;
-use WPRetriever\Settings;
-use WPRetriever\TextNormalizer;
+use RiTriever\Database\LocalVectorRepository;
+use RiTriever\Embedding\EmbeddingProviderFactory;
+use RiTriever\LanguageOptions;
+use RiTriever\Settings;
+use RiTriever\TextNormalizer;
 
 final class LocalVectorProvider
 {

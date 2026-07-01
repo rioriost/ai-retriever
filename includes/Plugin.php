@@ -2,17 +2,17 @@
 /**
  * Main plugin bootstrap.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
-use WPRetriever\Admin\SettingsPage;
-use WPRetriever\CLI\BackfillCommand;
-use WPRetriever\Database\BackfillQueueSchema;
-use WPRetriever\Database\VectorSchema;
+use RiTriever\Admin\SettingsPage;
+use RiTriever\CLI\BackfillCommand;
+use RiTriever\Database\BackfillQueueSchema;
+use RiTriever\Database\VectorSchema;
 
 final class Plugin
 {
@@ -51,7 +51,7 @@ final class Plugin
         }
 
         add_action(
-            "update_option_" . WP_RETRIEVER_OPTION_KEY,
+            "update_option_" . RITRIEVER_OPTION_KEY,
             [self::class, "on_settings_updated"],
             10,
             2,
@@ -59,7 +59,7 @@ final class Plugin
 
         $this->booted = true;
         Logger::debug("plugin", "boot complete", [
-            "version" => WP_RETRIEVER_VERSION,
+            "version" => RITRIEVER_VERSION,
         ]);
     }
 
@@ -73,6 +73,7 @@ final class Plugin
         $schema_keys = [
             "embedding_provider",
             "target_locale",
+            "wp_ai_embedding_model",
             "openai_embedding_model",
             "custom_embedding_model",
             "custom_embedding_preset",

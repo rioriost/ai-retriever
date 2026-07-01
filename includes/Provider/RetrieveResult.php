@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace WPRetriever\Provider;
+namespace RiTriever\Provider;
 
 final class RetrieveResult
 {

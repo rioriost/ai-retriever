@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-PLUGIN_SLUG="${PLUGIN_SLUG:-ai-retriever}"
+PLUGIN_SLUG="${PLUGIN_SLUG:-ritriever}"
 WP_PATH="${WP_PATH:-/var/www/html}"
 PLUGIN_CHECK_FLAGS="${PLUGIN_CHECK_FLAGS:---format=table}"
 PLUGIN_ZIP="${PLUGIN_ZIP:-}"

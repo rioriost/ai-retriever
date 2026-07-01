@@ -2,16 +2,16 @@
 /**
  * Index coverage and failure diagnostics.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Diagnostics read custom vector/index metadata on demand; these values are volatile and not useful to cache.
 
-use WPRetriever\Database\VectorSchema;
+use RiTriever\Database\VectorSchema;
 
 final class IndexDiagnostics
 {
@@ -119,7 +119,7 @@ final class IndexDiagnostics
         return (int) $wpdb->get_var(
             $wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''",
-                WP_RETRIEVER_POSTMETA_LAST_ERROR,
+                RITRIEVER_POSTMETA_LAST_ERROR,
             ),
         );
     }
@@ -133,7 +133,7 @@ final class IndexDiagnostics
         $rows = $wpdb->get_col(
             $wpdb->prepare(
                 "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
-                WP_RETRIEVER_POSTMETA_LAST_ERROR,
+                RITRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),
         );
@@ -149,7 +149,7 @@ final class IndexDiagnostics
         $rows = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
-                WP_RETRIEVER_POSTMETA_LAST_ERROR,
+                RITRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),
             ARRAY_A,

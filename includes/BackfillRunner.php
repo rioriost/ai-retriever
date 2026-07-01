@@ -2,25 +2,25 @@
 /**
  * Shared backfill queue runner for admin and WP-CLI initialization flows.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter,Squiz.PHP.DiscouragedFunctions.Discouraged -- Backfill jobs are stored in custom queue tables and require atomic SQL updates that are not covered by WordPress cache APIs.
 
-use WPRetriever\Database\BackfillQueueSchema;
-use WPRetriever\Database\VectorSchema;
+use RiTriever\Database\BackfillQueueSchema;
+use RiTriever\Database\VectorSchema;
 
 final class BackfillRunner
 {
-    public const OPTION_KEY = "wp_retriever_backfill_queue";
-    public const CRON_HOOK = "wp_retriever_process_backfill_queue";
+    public const OPTION_KEY = "ritriever_backfill_queue";
+    public const CRON_HOOK = "ritriever_process_backfill_queue";
     public const DEFAULT_BATCH_SIZE = 20;
     private const STALE_LOCK_MINUTES = 15;
-    private const PROCESS_LOCK_OPTION = "wp_retriever_backfill_process_lock";
+    private const PROCESS_LOCK_OPTION = "ritriever_backfill_process_lock";
     private const PROCESS_LOCK_TTL_SECONDS = 120;
 
     private function __construct() {}
@@ -755,7 +755,7 @@ final class BackfillRunner
         try {
             return bin2hex(random_bytes(16));
         } catch (\Throwable $e) {
-            return uniqid("wp-retriever-", true);
+            return uniqid("ritriever-", true);
         }
     }
 

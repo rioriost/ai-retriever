@@ -2,12 +2,12 @@
 /**
  * WordPress locale options used by the RAG target language setting.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 final class LanguageOptions
 {
@@ -110,7 +110,7 @@ final class LanguageOptions
         $locale = function_exists("get_locale") ? (string) get_locale() : "en_US";
         return sprintf(
             /* translators: %s: current WordPress site locale. */
-            __("Site language (%s)", "ai-retriever"),
+            __("Site language (%s)", "ritriever"),
             $locale,
         );
     }

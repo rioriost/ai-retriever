@@ -2,12 +2,12 @@
 /**
  * Shared post eligibility checks for indexing and rendering.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
 final class PostFilter
 {

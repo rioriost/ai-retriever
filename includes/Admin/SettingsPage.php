@@ -2,26 +2,26 @@
 /**
  * Admin settings page.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever\Admin;
+namespace RiTriever\Admin;
 
-use WPRetriever\BackfillRunner;
-use WPRetriever\Database\VectorCapabilities;
-use WPRetriever\Embedding\EmbeddingProviderFactory;
-use WPRetriever\IndexDiagnostics;
-use WPRetriever\LanguageOptions;
-use WPRetriever\Logger;
-use WPRetriever\PostSync;
-use WPRetriever\Provider\LocalVectorProvider;
-use WPRetriever\Settings;
+use RiTriever\BackfillRunner;
+use RiTriever\Database\VectorCapabilities;
+use RiTriever\Embedding\EmbeddingProviderFactory;
+use RiTriever\IndexDiagnostics;
+use RiTriever\LanguageOptions;
+use RiTriever\Logger;
+use RiTriever\PostSync;
+use RiTriever\Provider\LocalVectorProvider;
+use RiTriever\Settings;
 
 final class SettingsPage
 {
-    public const PAGE_SLUG = "wp-retriever-settings";
+    public const PAGE_SLUG = "ritriever-settings";
 
     private function __construct() {}
 
@@ -30,43 +30,43 @@ final class SettingsPage
         add_action("admin_menu", [self::class, "menu"]);
         add_action("admin_init", [self::class, "settings"]);
         add_action("admin_enqueue_scripts", [self::class, "enqueue_assets"]);
-        add_action("admin_post_wp_retriever_initialize", [
+        add_action("admin_post_ritriever_initialize", [
             self::class,
             "handle_initialize",
         ]);
-        add_action("wp_ajax_wp_retriever_backfill_status", [
+        add_action("wp_ajax_ritriever_backfill_status", [
             self::class,
             "handle_ajax_backfill_status",
         ]);
-        add_action("wp_ajax_wp_retriever_backfill_run", [
+        add_action("wp_ajax_ritriever_backfill_run", [
             self::class,
             "handle_ajax_backfill_run",
         ]);
-        add_action("wp_ajax_wp_retriever_backfill_pause", [
+        add_action("wp_ajax_ritriever_backfill_pause", [
             self::class,
             "handle_ajax_backfill_pause",
         ]);
-        add_action("wp_ajax_wp_retriever_backfill_resume", [
+        add_action("wp_ajax_ritriever_backfill_resume", [
             self::class,
             "handle_ajax_backfill_resume",
         ]);
-        add_action("wp_ajax_wp_retriever_backfill_cancel", [
+        add_action("wp_ajax_ritriever_backfill_cancel", [
             self::class,
             "handle_ajax_backfill_cancel",
         ]);
-        add_action("admin_post_wp_retriever_test_embedding", [
+        add_action("admin_post_ritriever_test_embedding", [
             self::class,
             "handle_test_embedding",
         ]);
-        add_action("admin_post_wp_retriever_test_db", [
+        add_action("admin_post_ritriever_test_db", [
             self::class,
             "handle_test_db",
         ]);
-        add_action("admin_post_wp_retriever_live_vector_query", [
+        add_action("admin_post_ritriever_live_vector_query", [
             self::class,
             "handle_live_vector_query",
         ]);
-        add_action("admin_post_wp_retriever_retry_failed", [
+        add_action("admin_post_ritriever_retry_failed", [
             self::class,
             "handle_retry_failed",
         ]);
@@ -75,9 +75,9 @@ final class SettingsPage
     public static function menu(): void
     {
         add_options_page(
-            "AI Retriever",
-            "AI Retriever",
-            (string) WP_RETRIEVER_ADMIN_CAPABILITY,
+            "RiTriever",
+            "RiTriever",
+            (string) RITRIEVER_ADMIN_CAPABILITY,
             self::PAGE_SLUG,
             [self::class, "render"],
         );
@@ -85,7 +85,7 @@ final class SettingsPage
 
     public static function settings(): void
     {
-        register_setting("wp_retriever", WP_RETRIEVER_OPTION_KEY, [
+        register_setting("ritriever", RITRIEVER_OPTION_KEY, [
             "sanitize_callback" => [Settings::class, "sanitize"],
         ]);
     }
@@ -104,18 +104,18 @@ final class SettingsPage
         );
 
         wp_enqueue_script(
-            "wp-retriever-admin-backfill",
-            WP_RETRIEVER_PLUGIN_URL . "assets/admin-backfill.js",
+            "ritriever-admin-backfill",
+            RITRIEVER_PLUGIN_URL . "assets/admin-backfill.js",
             [],
-            WP_RETRIEVER_VERSION,
+            RITRIEVER_VERSION,
             true,
         );
         wp_add_inline_script(
-            "wp-retriever-admin-backfill",
-            "window.wpRetrieverBackfill = " .
+            "ritriever-admin-backfill",
+            "window.ritrieverBackfill = " .
                 wp_json_encode([
                     "ajaxUrl" => admin_url("admin-ajax.php"),
-                    "nonce" => wp_create_nonce("wp_retriever_backfill"),
+                    "nonce" => wp_create_nonce("ritriever_backfill"),
                     "autoStart" => $auto_start,
                     "delayMs" => 250,
                     "errorDelayMs" => 5000,
@@ -134,14 +134,21 @@ final class SettingsPage
                 ";",
             "before",
         );
+        wp_enqueue_script(
+            "ritriever-admin-settings",
+            RITRIEVER_PLUGIN_URL . "assets/admin-settings.js",
+            [],
+            RITRIEVER_VERSION,
+            true,
+        );
     }
 
     public static function handle_initialize(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
-        check_admin_referer("wp_retriever_initialize");
+        check_admin_referer("ritriever_initialize");
 
         $cap = VectorCapabilities::detect();
         if (!$cap["native_vector"] || !$cap["vector_index"]) {
@@ -207,10 +214,10 @@ final class SettingsPage
 
     private static function assert_ajax_backfill_access(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_send_json_error(["message" => self::text("forbidden")], 403);
         }
-        check_ajax_referer("wp_retriever_backfill", "nonce");
+        check_ajax_referer("ritriever_backfill", "nonce");
     }
 
     /** @param array<string,mixed> $state @return array<string,mixed> */
@@ -255,16 +262,16 @@ final class SettingsPage
 
     public static function handle_test_embedding(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
-        check_admin_referer("wp_retriever_test_embedding");
+        check_admin_referer("ritriever_test_embedding");
 
         try {
             $started = microtime(true);
             $provider = EmbeddingProviderFactory::make();
             $embedding = $provider->embed(
-                "AI Retriever embedding provider test",
+                "RiTriever embedding provider test",
             );
             $elapsed_ms = (int) round((microtime(true) - $started) * 1000);
             if ($embedding === []) {
@@ -289,10 +296,10 @@ final class SettingsPage
 
     public static function handle_test_db(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
-        check_admin_referer("wp_retriever_test_db");
+        check_admin_referer("ritriever_test_db");
 
         try {
             $probe = VectorCapabilities::run_probe();
@@ -318,14 +325,14 @@ final class SettingsPage
 
     public static function handle_live_vector_query(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
-        check_admin_referer("wp_retriever_live_vector_query");
+        check_admin_referer("ritriever_live_vector_query");
 
-        $query = isset($_POST["wp_retriever_live_query"])
+        $query = isset($_POST["ritriever_live_query"])
             ? sanitize_text_field(
-                (string) wp_unslash($_POST["wp_retriever_live_query"]),
+                (string) wp_unslash($_POST["ritriever_live_query"]),
             )
             : "";
         if ($query === "") {
@@ -344,9 +351,12 @@ final class SettingsPage
             "error" => $result->error,
             "provider" => (string) Settings::get("embedding_provider"),
             "model" =>
-                (string) Settings::get("embedding_provider") === "openai"
+                (string) Settings::get("embedding_provider") ===
+                "wp_ai_client"
+                    ? (string) Settings::get("wp_ai_embedding_model")
+                    : ((string) Settings::get("embedding_provider") === "openai"
                     ? (string) Settings::get("openai_embedding_model")
-                    : (string) Settings::get("custom_embedding_model"),
+                    : (string) Settings::get("custom_embedding_model")),
             "elapsed_ms" => $elapsed_ms,
             "hits" => [],
         ];
@@ -380,10 +390,10 @@ final class SettingsPage
 
     public static function handle_retry_failed(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
-        check_admin_referer("wp_retriever_retry_failed");
+        check_admin_referer("ritriever_retry_failed");
 
         $post_id = isset($_POST["post_id"]) ? (int) $_POST["post_id"] : 0;
         $ids =
@@ -398,7 +408,7 @@ final class SettingsPage
             PostSync::on_save_post($id, get_post($id));
             $processed++;
             if (
-                get_post_meta($id, WP_RETRIEVER_POSTMETA_LAST_ERROR, true) !==
+                get_post_meta($id, RITRIEVER_POSTMETA_LAST_ERROR, true) !==
                 ""
             ) {
                 $errors++;
@@ -416,7 +426,7 @@ final class SettingsPage
 
     public static function render(): void
     {
-        if (!current_user_can((string) WP_RETRIEVER_ADMIN_CAPABILITY)) {
+        if (!current_user_can((string) RITRIEVER_ADMIN_CAPABILITY)) {
             wp_die(esc_html(self::text("forbidden")));
         }
 
@@ -427,13 +437,16 @@ final class SettingsPage
         $custom_presets = Settings::custom_embedding_presets();
         $custom_preset =
             (string) ($opts["custom_embedding_preset"] ?? "custom");
+        $wp_ai_model = Settings::normalize_openai_embedding_model(
+            (string) $opts["wp_ai_embedding_model"],
+        );
         $model = Settings::normalize_openai_embedding_model(
             (string) $opts["openai_embedding_model"],
         );
         $initialized = (int) $opts["initial_backfill_completed_at"] > 0;
         ?>
 		<div class="wrap">
-			<h1>AI Retriever</h1>
+			<h1>RiTriever</h1>
 			<?php self::render_notice(); ?>
 			<p><strong><?php echo esc_html(
        self::text("database"),
@@ -447,16 +460,16 @@ final class SettingsPage
 			<hr>
 			<h2><?php echo esc_html("2. " . self::text("rag_search_settings")); ?></h2>
 			<form method="post" action="options.php">
-				<?php settings_fields("wp_retriever"); ?>
+				<?php settings_fields("ritriever"); ?>
 				<?php self::hidden_state_fields($opts); ?>
 				<table class="form-table" role="presentation">
 					<tr>
-						<th scope="row"><label for="wp-retriever-search-mode"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-search-mode"><?php echo esc_html(
           self::text("rag_search_mode"),
       ); ?></label></th>
 						<td>
-							<select id="wp-retriever-search-mode" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<select id="ritriever-search-mode" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[search_mode]">
 								<?php foreach (["off", "a_b_admin", "full"] as $mode): ?>
 									<option value="<?php echo esc_attr($mode); ?>" <?php selected(
@@ -471,10 +484,10 @@ final class SettingsPage
 						<th scope="row"><?php echo esc_html(self::text("display_badges")); ?></th>
 						<td>
 							<input type="hidden" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+           RITRIEVER_OPTION_KEY,
        ); ?>[display_source_badges]" value="0">
 							<label><input type="checkbox" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+           RITRIEVER_OPTION_KEY,
        ); ?>[display_source_badges]" value="1" <?php checked(
     $opts["display_source_badges"],
 ); ?>> [RAG] / [<?php echo esc_html(
@@ -483,12 +496,12 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><label for="wp-retriever-target-locale"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-target-locale"><?php echo esc_html(
           self::text("target_language"),
       ); ?></label></th>
 						<td>
-							<select id="wp-retriever-target-locale" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<select id="ritriever-target-locale" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[target_locale]">
 								<?php foreach (LanguageOptions::options() as $locale => $label): ?>
 									<option value="<?php echo esc_attr($locale); ?>" <?php selected(
@@ -504,15 +517,16 @@ final class SettingsPage
 					</tr>
 
 					<tr>
-						<th scope="row"><label for="wp-retriever-provider"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-provider"><?php echo esc_html(
           self::text("embedding_provider"),
       ); ?></label></th>
 						<td>
-							<select id="wp-retriever-provider" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<select id="ritriever-provider" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[embedding_provider]">
 								<?php foreach (
             [
+                "wp_ai_client" => "WordPress AI Client",
                 "openai" => "OpenAI",
                 "azure_openai" => "Azure OpenAI",
                 "ollama" => "Ollama",
@@ -529,15 +543,47 @@ final class SettingsPage
 ); ?>><?php echo esc_html($provider_label); ?></option>
 								<?php endforeach; ?>
 							</select>
+							<p class="description"><?php echo esc_html(
+           self::text("embedding_provider_note"),
+       ); ?></p>
+						</td>
+					</tr>
+					<tr data-provider-row="wp_ai_client">
+						<th scope="row"><label for="ritriever-wp-ai-model"><?php echo esc_html(
+          self::text("wp_ai_embedding_model"),
+      ); ?></label></th>
+						<td>
+							<select id="ritriever-wp-ai-model" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
+       ); ?>[wp_ai_embedding_model]">
+								<option value="text-embedding-3-small" data-dimensions="1536" <?php selected(
+            $wp_ai_model,
+            "text-embedding-3-small",
+        ); ?>>text-embedding-3-small (1536)</option>
+								<option value="text-embedding-3-large" data-dimensions="3072" <?php selected(
+            $wp_ai_model,
+            "text-embedding-3-large",
+        ); ?> <?php disabled(
+     !$large_supported && $wp_ai_model !== "text-embedding-3-large",
+ ); ?>>text-embedding-3-large (3072)</option>
+							</select>
+							<?php if (!$large_supported): ?>
+								<p class="description"><?php echo esc_html(
+            self::text("large_not_supported"),
+        ); ?></p>
+							<?php endif; ?>
+							<p class="description"><?php echo esc_html(
+           self::text("wp_ai_embedding_model_note"),
+       ); ?></p>
 						</td>
 					</tr>
 					<tr data-provider-row="openai">
-						<th scope="row"><label for="wp-retriever-openai-key"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-openai-key"><?php echo esc_html(
           self::text("openai_api_key"),
       ); ?></label></th>
 						<td>
-							<input id="wp-retriever-openai-key" type="password" class="regular-text" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<input id="ritriever-openai-key" type="password" class="regular-text" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[openai_api_key]" value="" placeholder="<?php echo esc_attr(
     !empty($opts["openai_api_key"]) ? self::text("api_key_configured") : "",
 ); ?>" autocomplete="off">
@@ -547,12 +593,12 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr data-provider-row="openai">
-						<th scope="row"><label for="wp-retriever-openai-model"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-openai-model"><?php echo esc_html(
           self::text("embedding_model"),
       ); ?></label></th>
 						<td>
-							<select id="wp-retriever-openai-model" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<select id="ritriever-openai-model" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[openai_embedding_model]">
 								<option value="text-embedding-3-small" data-dimensions="1536" <?php selected(
             $model,
@@ -576,12 +622,12 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-custom-preset"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-custom-preset"><?php echo esc_html(
           self::text("custom_embedding_preset"),
       ); ?></label></th>
 						<td>
-							<select id="wp-retriever-custom-preset" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<select id="ritriever-custom-preset" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[custom_embedding_preset]">
 								<option value="custom" <?php selected(
             $custom_preset,
@@ -611,33 +657,33 @@ final class SettingsPage
        ); ?></p>
 						</td>
 					</tr>
-					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-custom-format"><?php echo esc_html(
+					<tr data-provider-row="wp_ai_client azure_openai ollama lmstudio infinity tei custom_http">
+						<th scope="row"><label for="ritriever-custom-format"><?php echo esc_html(
           self::text("custom_embedding_format"),
       ); ?></label></th>
-						<td><input id="wp-retriever-custom-format" type="text" class="regular-text" name="<?php echo esc_attr(
-          WP_RETRIEVER_OPTION_KEY,
+						<td><input id="ritriever-custom-format" type="text" class="regular-text" name="<?php echo esc_attr(
+          RITRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_format]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_format"],
 ); ?>" readonly></td>
 					</tr>
 					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-custom-endpoint"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-custom-endpoint"><?php echo esc_html(
           self::text("custom_endpoint"),
       ); ?></label></th>
-						<td><input id="wp-retriever-custom-endpoint" type="url" class="regular-text" name="<?php echo esc_attr(
-          WP_RETRIEVER_OPTION_KEY,
+						<td><input id="ritriever-custom-endpoint" type="url" class="regular-text" name="<?php echo esc_attr(
+          RITRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_endpoint]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_endpoint"],
 ); ?>"></td>
 					</tr>
 					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-custom-key"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-custom-key"><?php echo esc_html(
           self::text("custom_api_key"),
       ); ?></label></th>
 						<td>
-							<input id="wp-retriever-custom-key" type="password" class="regular-text" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<input id="ritriever-custom-key" type="password" class="regular-text" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[custom_embedding_api_key]" value="" placeholder="<?php echo esc_attr(
     !empty($opts["custom_embedding_api_key"])
         ? self::text("api_key_configured")
@@ -649,22 +695,22 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-custom-model"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-custom-model"><?php echo esc_html(
           self::text("embedding_model"),
       ); ?></label></th>
-						<td><input id="wp-retriever-custom-model" type="text" class="regular-text" name="<?php echo esc_attr(
-          WP_RETRIEVER_OPTION_KEY,
+						<td><input id="ritriever-custom-model" type="text" class="regular-text" name="<?php echo esc_attr(
+          RITRIEVER_OPTION_KEY,
       ); ?>[custom_embedding_model]" value="<?php echo esc_attr(
     (string) $opts["custom_embedding_model"],
 ); ?>"></td>
 					</tr>
 					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
-						<th scope="row"><label for="wp-retriever-dimensions"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-dimensions"><?php echo esc_html(
           self::text("dimensions"),
       ); ?></label></th>
 						<td>
-							<input id="wp-retriever-dimensions" type="number" min="1" max="4096" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<input id="ritriever-dimensions" type="number" min="1" max="4096" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[embedding_dimensions]" value="<?php echo esc_attr(
     (string) $opts["embedding_dimensions"],
 ); ?>">
@@ -686,15 +732,15 @@ final class SettingsPage
        "4. " . self::text("japanese_normalization_settings"),
    ); ?></h2>
 			<form method="post" action="options.php">
-				<?php settings_fields("wp_retriever"); ?>
+				<?php settings_fields("ritriever"); ?>
 				<table class="form-table" role="presentation">
 					<tr>
 						<td colspan="2">
 							<input type="hidden" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+           RITRIEVER_OPTION_KEY,
        ); ?>[japanese_normalization_enabled]" value="0">
-							<label><input id="wp-retriever-japanese-normalization" type="checkbox" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<label><input id="ritriever-japanese-normalization" type="checkbox" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[japanese_normalization_enabled]" value="1" <?php checked(
     $opts["japanese_normalization_enabled"],
 ); ?>> <?php echo esc_html(
@@ -706,12 +752,12 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr data-normalization-row="1">
-						<th scope="row"><label for="wp-retriever-custom-fields"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-custom-fields"><?php echo esc_html(
           self::text("indexed_custom_fields"),
       ); ?></label></th>
 						<td>
-							<textarea id="wp-retriever-custom-fields" class="large-text code" rows="3" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<textarea id="ritriever-custom-fields" class="large-text code" rows="3" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[indexed_custom_fields]"><?php echo esc_textarea(
     implode("\n", (array) $opts["indexed_custom_fields"]),
 ); ?></textarea>
@@ -721,12 +767,12 @@ final class SettingsPage
 						</td>
 					</tr>
 					<tr data-normalization-row="1">
-						<th scope="row"><label for="wp-retriever-taxonomies"><?php echo esc_html(
+						<th scope="row"><label for="ritriever-taxonomies"><?php echo esc_html(
           self::text("indexed_taxonomies"),
       ); ?></label></th>
 						<td>
-							<textarea id="wp-retriever-taxonomies" class="large-text code" rows="3" name="<?php echo esc_attr(
-           WP_RETRIEVER_OPTION_KEY,
+							<textarea id="ritriever-taxonomies" class="large-text code" rows="3" name="<?php echo esc_attr(
+           RITRIEVER_OPTION_KEY,
        ); ?>[indexed_taxonomies]"><?php echo esc_textarea(
     implode("\n", (array) $opts["indexed_taxonomies"]),
 ); ?></textarea>
@@ -755,7 +801,6 @@ final class SettingsPage
 			<h2><?php echo esc_html("8. " . self::text("rag_retrieval_tuning")); ?></h2>
 			<?php self::render_retrieval_tuning($opts); ?>
 		</div>
-		<?php self::render_model_script(); ?>
 		<?php
     }
 
@@ -766,15 +811,15 @@ final class SettingsPage
             self::text("rag_retrieval_tuning_explain"),
         ); ?></p>
         <form method="post" action="options.php">
-            <?php settings_fields("wp_retriever"); ?>
+            <?php settings_fields("ritriever"); ?>
             <table class="form-table" role="presentation">
                 <tr>
-                    <th scope="row"><label for="wp-retriever-top-k"><?php echo esc_html(
+                    <th scope="row"><label for="ritriever-top-k"><?php echo esc_html(
                         self::text("rag_top_k"),
                     ); ?></label></th>
                     <td>
-                        <input id="wp-retriever-top-k" type="number" min="1" max="200" step="1" name="<?php echo esc_attr(
-                            WP_RETRIEVER_OPTION_KEY,
+                        <input id="ritriever-top-k" type="number" min="1" max="200" step="1" name="<?php echo esc_attr(
+                            RITRIEVER_OPTION_KEY,
                         ); ?>[top_k]" value="<?php echo esc_attr((string) $opts["top_k"]); ?>">
                         <p class="description"><?php echo esc_html(
                             self::text("rag_top_k_note"),
@@ -782,12 +827,12 @@ final class SettingsPage
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="wp-retriever-min-score"><?php echo esc_html(
+                    <th scope="row"><label for="ritriever-min-score"><?php echo esc_html(
                         self::text("rag_min_score"),
                     ); ?></label></th>
                     <td>
-                        <input id="wp-retriever-min-score" type="number" min="0" max="1" step="0.01" name="<?php echo esc_attr(
-                            WP_RETRIEVER_OPTION_KEY,
+                        <input id="ritriever-min-score" type="number" min="0" max="1" step="0.01" name="<?php echo esc_attr(
+                            RITRIEVER_OPTION_KEY,
                         ); ?>[min_score]" value="<?php echo esc_attr((string) $opts["min_score"]); ?>">
                         <p class="description"><?php echo esc_html(
                             self::text("rag_min_score_note"),
@@ -807,9 +852,9 @@ final class SettingsPage
         <form method="post" action="<?php echo esc_url(
             admin_url("admin-post.php"),
         ); ?>">
-            <input type="hidden" name="action" value="wp_retriever_live_vector_query">
-            <?php wp_nonce_field("wp_retriever_live_vector_query"); ?>
-            <input type="search" class="regular-text" name="wp_retriever_live_query" value="<?php echo esc_attr(
+            <input type="hidden" name="action" value="ritriever_live_vector_query">
+            <?php wp_nonce_field("ritriever_live_vector_query"); ?>
+            <input type="search" class="regular-text" name="ritriever_live_query" value="<?php echo esc_attr(
                 is_array($result) ? (string) ($result["query"] ?? "") : "",
             ); ?>" placeholder="<?php echo esc_attr(
     self::text("live_query_placeholder"),
@@ -933,8 +978,8 @@ final class SettingsPage
             <form method="post" action="<?php echo esc_url(
                 admin_url("admin-post.php"),
             ); ?>" style="margin:0 0 1em;">
-                <input type="hidden" name="action" value="wp_retriever_retry_failed">
-                <?php wp_nonce_field("wp_retriever_retry_failed"); ?>
+                <input type="hidden" name="action" value="ritriever_retry_failed">
+                <?php wp_nonce_field("ritriever_retry_failed"); ?>
                 <?php submit_button(
                     self::text("retry_all_failed"),
                     "secondary",
@@ -979,12 +1024,12 @@ final class SettingsPage
                                 <form method="post" action="<?php echo esc_url(
                                     admin_url("admin-post.php"),
                                 ); ?>">
-                                    <input type="hidden" name="action" value="wp_retriever_retry_failed">
+                                    <input type="hidden" name="action" value="ritriever_retry_failed">
                                     <input type="hidden" name="post_id" value="<?php echo esc_attr(
                                         (string) $failed["post_id"],
                                     ); ?>">
                                     <?php wp_nonce_field(
-                                        "wp_retriever_retry_failed",
+                                        "ritriever_retry_failed",
                                     ); ?>
                                     <?php submit_button(
                                         self::text("retry"),
@@ -1012,8 +1057,8 @@ final class SettingsPage
         <form method="post" action="<?php echo esc_url(
             admin_url("admin-post.php"),
         ); ?>">
-            <input type="hidden" name="action" value="wp_retriever_test_db">
-            <?php wp_nonce_field("wp_retriever_test_db"); ?>
+            <input type="hidden" name="action" value="ritriever_test_db">
+            <?php wp_nonce_field("ritriever_test_db"); ?>
             <?php submit_button(
                 self::text("db_test_button"),
                 "secondary",
@@ -1028,19 +1073,21 @@ final class SettingsPage
     {
         $provider = (string) ($opts["embedding_provider"] ?? "");
         echo "<p>" . esc_html(self::text("embedding_test_explain")) . "</p>";
-        if ($provider === "openai") {
+        if (
+            in_array($provider, ["wp_ai_client", "openai", "azure_openai"], true)
+        ) {
             echo '<p class="description"><strong>' .
                 esc_html(self::text("warning")) .
                 ":</strong> " .
-                esc_html(self::text("embedding_test_openai_warning")) .
+                esc_html(self::text("embedding_test_external_warning")) .
                 "</p>";
         }
         ?>
         <form method="post" action="<?php echo esc_url(
             admin_url("admin-post.php"),
         ); ?>">
-            <input type="hidden" name="action" value="wp_retriever_test_embedding">
-            <?php wp_nonce_field("wp_retriever_test_embedding"); ?>
+            <input type="hidden" name="action" value="ritriever_test_embedding">
+            <?php wp_nonce_field("ritriever_test_embedding"); ?>
             <?php submit_button(
                 self::text("embedding_test_button"),
                 "secondary",
@@ -1120,8 +1167,8 @@ final class SettingsPage
 		<form method="post" action="<?php echo esc_url(
       admin_url("admin-post.php"),
   ); ?>">
-			<input type="hidden" name="action" value="wp_retriever_initialize">
-			<?php wp_nonce_field("wp_retriever_initialize"); ?>
+			<input type="hidden" name="action" value="ritriever_initialize">
+			<?php wp_nonce_field("ritriever_initialize"); ?>
 			<?php submit_button(
        self::text("initialize_button"),
        "primary",
@@ -1137,8 +1184,8 @@ final class SettingsPage
         $total = max(1, (int) $queue["total"]);
         $processed = min($total, max(0, (int) $queue["processed"]));
         $percent = (int) floor(($processed / $total) * 100);
-        echo '<div id="wp-retriever-backfill-progress">';
-        echo "<p data-wp-retriever-status-text>" .
+        echo '<div id="ritriever-backfill-progress">';
+        echo "<p data-ritriever-status-text>" .
             esc_html(
                 sprintf(
                     self::text("init_progress"),
@@ -1148,26 +1195,26 @@ final class SettingsPage
                 ),
             ) .
             "</p>";
-        echo '<div style="max-width:420px;height:14px;background:#dcdcde;border-radius:8px;overflow:hidden;"><div data-wp-retriever-progress-bar style="width:' .
+        echo '<div style="max-width:420px;height:14px;background:#dcdcde;border-radius:8px;overflow:hidden;"><div data-ritriever-progress-bar style="width:' .
             esc_attr((string) $percent) .
             '%;height:14px;background:#2271b1;"></div></div>';
-        echo "<p><strong data-wp-retriever-percent>" .
+        echo "<p><strong data-ritriever-percent>" .
             esc_html((string) $percent) .
             "%</strong></p>";
-        echo '<p class="description" data-wp-retriever-detail-text>' .
+        echo '<p class="description" data-ritriever-detail-text>' .
             esc_html(self::queue_message((string) $queue["status"])) .
             "</p>";
         echo '<p class="description">' .
             esc_html(self::text("init_background_note")) .
             "</p>";
-        echo '<p class="wp-retriever-backfill-controls">';
-        echo '<button type="button" class="button" data-wp-retriever-control="pause">' .
+        echo '<p class="ritriever-backfill-controls">';
+        echo '<button type="button" class="button" data-ritriever-control="pause">' .
             esc_html(self::text("init_pause")) .
             "</button> ";
-        echo '<button type="button" class="button" data-wp-retriever-control="resume">' .
+        echo '<button type="button" class="button" data-ritriever-control="resume">' .
             esc_html(self::text("init_resume")) .
             "</button> ";
-        echo '<button type="button" class="button button-link-delete" data-wp-retriever-control="cancel">' .
+        echo '<button type="button" class="button button-link-delete" data-ritriever-control="cancel">' .
             esc_html(self::text("init_cancel")) .
             "</button>";
         echo "</p>";
@@ -1186,7 +1233,7 @@ final class SettingsPage
             as $key
         ) {
             echo '<input type="hidden" name="' .
-                esc_attr(WP_RETRIEVER_OPTION_KEY . "[" . $key . "]") .
+                esc_attr(RITRIEVER_OPTION_KEY . "[" . $key . "]") .
                 '" value="' .
                 esc_attr((string) ($opts[$key] ?? "")) .
                 '">';
@@ -1196,8 +1243,8 @@ final class SettingsPage
     private static function render_notice(): void
     {
         // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only admin notice parameters from internal redirects.
-        $status = isset($_GET["wp_retriever_status"])
-            ? sanitize_key((string) wp_unslash($_GET["wp_retriever_status"]))
+        $status = isset($_GET["ritriever_status"])
+            ? sanitize_key((string) wp_unslash($_GET["ritriever_status"]))
             : "";
         if ($status === "") {
             return;
@@ -1298,99 +1345,9 @@ final class SettingsPage
         // phpcs:enable WordPress.Security.NonceVerification.Recommended
     }
 
-    private static function render_model_script(): void
-    {
-        ?>
-		<script>
-		(function () {
-			const provider = document.getElementById('wp-retriever-provider');
-			const model = document.getElementById('wp-retriever-openai-model');
-			const dimensions = document.getElementById('wp-retriever-dimensions');
-			const customPreset = document.getElementById('wp-retriever-custom-preset');
-			const customEndpoint = document.getElementById('wp-retriever-custom-endpoint');
-			const customModel = document.getElementById('wp-retriever-custom-model');
-			const customFormat = document.getElementById('wp-retriever-custom-format');
-			const providerRows = document.querySelectorAll('[data-provider-row]');
-			const normalization = document.getElementById('wp-retriever-japanese-normalization');
-			const normalizationRows = document.querySelectorAll('[data-normalization-row]');
-			function syncProviderRows() {
-				if (!provider) {
-					return;
-				}
-				providerRows.forEach((row) => {
-					const providers = (row.dataset.providerRow || '').split(/\s+/);
-					row.style.display = providers.includes(provider.value) ? '' : 'none';
-				});
-				if (customPreset) {
-					let firstVisible = null;
-					Array.from(customPreset.options).forEach((option) => {
-						const optionProvider = option.dataset.provider || 'custom_http';
-						const visible = provider.value === 'custom_http' ? true : optionProvider === provider.value;
-						option.hidden = !visible;
-						option.disabled = !visible;
-						if (visible && !firstVisible) {
-							firstVisible = option;
-						}
-					});
-					if (customPreset.selectedOptions.length && customPreset.selectedOptions[0].disabled && firstVisible) {
-						customPreset.value = firstVisible.value;
-					}
-				}
-				if (provider.value === 'openai' && model && dimensions) {
-					const option = model.options[model.selectedIndex];
-					dimensions.value = option && option.dataset.dimensions ? option.dataset.dimensions : '1536';
-				}
-			}
-			function syncCustomPresetFields() {
-				if (!customPreset || customPreset.value === 'custom') {
-					return;
-				}
-				const option = customPreset.options[customPreset.selectedIndex];
-				if (!option) {
-					return;
-				}
-				if (customEndpoint && option.dataset.endpoint) {
-					customEndpoint.value = option.dataset.endpoint;
-				}
-				if (customModel && option.dataset.model) {
-					customModel.value = option.dataset.model;
-				}
-				if (dimensions && option.dataset.dimensions) {
-					dimensions.value = option.dataset.dimensions;
-				}
-				if (customFormat && option.dataset.format) {
-					customFormat.value = option.dataset.format;
-				}
-			}
-			function syncNormalizationRows() {
-				const visible = normalization ? normalization.checked : false;
-				normalizationRows.forEach((row) => {
-					row.style.display = visible ? '' : 'none';
-				});
-			}
-			if (provider) {
-				provider.addEventListener('change', syncProviderRows);
-			}
-			if (model) {
-				model.addEventListener('change', syncProviderRows);
-			}
-			if (normalization) {
-				normalization.addEventListener('change', syncNormalizationRows);
-			}
-			if (customPreset) {
-				customPreset.addEventListener('change', syncCustomPresetFields);
-			}
-			syncProviderRows();
-			syncCustomPresetFields();
-			syncNormalizationRows();
-		}());
-		</script>
-		<?php
-    }
-
     private static function live_query_result_key(): string
     {
-        return "wp_retriever_live_query_" . get_current_user_id();
+        return "ritriever_live_query_" . get_current_user_id();
     }
 
     private static function redirect_with_notice(
@@ -1401,7 +1358,7 @@ final class SettingsPage
             array_merge(
                 [
                     "page" => self::PAGE_SLUG,
-                    "wp_retriever_status" => $status,
+                    "ritriever_status" => $status,
                 ],
                 $args,
             ),
@@ -1416,7 +1373,7 @@ final class SettingsPage
         $ja = str_starts_with(strtolower((string) get_locale()), "ja");
         $copy = self::copy();
         $english = $copy["en"][$key] ?? $key;
-        $translated = get_translations_for_domain("ai-retriever")->translate(
+        $translated = get_translations_for_domain("ritriever")->translate(
             $english,
         );
         if ($translated !== $english || !$ja) {
@@ -1508,6 +1465,11 @@ final class SettingsPage
                 "indexed_taxonomies_note" =>
                     "Optional. One taxonomy slug per line or comma-separated, for example category or post_tag.",
                 "embedding_provider" => "Embedding provider",
+                "embedding_provider_note" =>
+                    "Use the WordPress AI Client when the site-level provider exposes embeddings. If text-embedding-3-large is unavailable there, choose OpenAI or Azure OpenAI fallback.",
+                "wp_ai_embedding_model" => "WordPress AI embedding model",
+                "wp_ai_embedding_model_note" =>
+                    "RiTriever requests this embedding model through the WordPress AI Client. If the site-level AI provider cannot select it, use the OpenAI/Azure OpenAI fallback.",
                 "openai_api_key" => "OpenAI API key",
                 "embedding_model" => "Embedding model",
                 "large_not_supported" =>
@@ -1516,12 +1478,12 @@ final class SettingsPage
                     "Changing the embedding model recreates the vector table and requires initialization again.",
                 "dimensions" => "Dimensions",
                 "dimensions_note" =>
-                    "For Custom HTTP providers, set this to match the returned embedding dimensions.",
+                    "For WordPress AI and Custom HTTP providers, this must match the returned embedding dimensions.",
                 "custom_embedding_preset" => "Provider/model preset",
                 "custom_embedding_format" => "Request format",
                 "custom_preset_manual" => "Manual custom HTTP settings",
                 "custom_embedding_preset_note" =>
-                    "Presets fill endpoint, model, and dimensions. External hosted providers are limited to OpenAI/Azure OpenAI; these custom presets are for local or self-hosted services.",
+                    "Presets fill endpoint, model, and dimensions. Hosted fallback providers are limited to Azure OpenAI; these custom presets are for local or self-hosted services.",
                 "custom_endpoint" => "Custom embedding endpoint",
                 "custom_api_key" => "Custom embedding API key",
                 "api_key_configured" => "API key is configured",
@@ -1531,8 +1493,8 @@ final class SettingsPage
                 "embedding_test" => "Embedding provider test",
                 "embedding_test_explain" =>
                     "Run one small embedding request with the current provider settings before starting initialization.",
-                "embedding_test_openai_warning" =>
-                    "This sends a short test string to OpenAI and may incur a small API charge.",
+                "embedding_test_external_warning" =>
+                    "This sends a short test string to the configured external embedding provider and may incur a small API charge.",
                 "embedding_test_button" => "Test embedding provider",
                 "embedding_test_ok" =>
                     'Embedding test succeeded. Provider: %1$s, model: %2$s, dimensions: %3$d, elapsed: %4$d ms.',
@@ -1660,6 +1622,12 @@ final class SettingsPage
                 "indexed_taxonomies_note" =>
                     "任意。分類の識別子を1行に1つ、またはカンマ区切りで指定します。例: category, post_tag。",
                 "embedding_provider" => "埋め込みプロバイダー",
+                "embedding_provider_note" =>
+                    "サイト全体のプロバイダーが埋め込みに対応している場合は WordPress AI Client を使います。text-embedding-3-large を選べない場合は OpenAI/Azure OpenAI fallback を選んでください。",
+                "wp_ai_embedding_model" =>
+                    "WordPress AI の埋め込みモデル",
+                "wp_ai_embedding_model_note" =>
+                    "RiTriever はこの埋め込みモデルを WordPress AI Client 経由で要求します。サイト全体の AI プロバイダーで選択できない場合は OpenAI/Azure OpenAI fallback を使ってください。",
                 "openai_api_key" => "埋め込み API キー",
                 "embedding_model" => "埋め込みモデル",
                 "large_not_supported" =>
@@ -1668,12 +1636,12 @@ final class SettingsPage
                     "埋め込みモデルを変更するとベクトルテーブルを作り直すため、再初期化が必要です。",
                 "dimensions" => "次元数",
                 "dimensions_note" =>
-                    "Custom HTTP プロバイダーが返すベクトル次元数に合わせて設定してください。",
+                    "WordPress AI と Custom HTTP プロバイダーが返すベクトル次元数に合わせて設定してください。",
                 "custom_embedding_preset" => "プロバイダー/モデル候補",
                 "custom_embedding_format" => "リクエスト形式",
                 "custom_preset_manual" => "手動設定",
                 "custom_embedding_preset_note" =>
-                    "候補を選び、必要ならエンドポイント、モデル、次元数を入力してください。外部 hosted provider は OpenAI/Azure OpenAI に限定し、ここではローカルまたは self-hosted サービスを想定しています。",
+                    "候補を選び、必要ならエンドポイント、モデル、次元数を入力してください。Hosted fallback provider は Azure OpenAI に限定し、ここではローカルまたは self-hosted サービスを想定しています。",
                 "custom_endpoint" => "埋め込みエンドポイント",
                 "custom_api_key" => "埋め込み API キー",
                 "api_key_configured" => "API キー設定済み",
@@ -1683,8 +1651,8 @@ final class SettingsPage
                 "embedding_test" => "埋め込みプロバイダーのチェック",
                 "embedding_test_explain" =>
                     "初期化の前に、現在のプロバイダー設定で埋め込みリクエストを1回実行します。",
-                "embedding_test_openai_warning" =>
-                    "短いテスト文字列を OpenAI に送信します。少額の API 利用料が発生する可能性があります。",
+                "embedding_test_external_warning" =>
+                    "短いテスト文字列を設定済みの外部埋め込みプロバイダーに送信します。少額の API 利用料が発生する可能性があります。",
                 "embedding_test_button" => "埋め込みプロバイダーをチェック",
                 "embedding_test_ok" =>
                     '埋め込みテスト成功。プロバイダー: %1$s、モデル: %2$s、次元数: %3$d、経過時間: %4$d ms。',

@@ -2,16 +2,16 @@
 /**
  * Bulk indexing pipeline for initial backfill jobs.
  *
- * @package WPRetriever
+ * @package RiTriever
  */
 
 declare(strict_types=1);
 
-namespace WPRetriever;
+namespace RiTriever;
 
-use WPRetriever\Database\LocalVectorRepository;
-use WPRetriever\Embedding\EmbeddingProviderFactory;
-use WPRetriever\Embedding\EmbeddingProviderInterface;
+use RiTriever\Database\LocalVectorRepository;
+use RiTriever\Embedding\EmbeddingProviderFactory;
+use RiTriever\Embedding\EmbeddingProviderInterface;
 
 final class BulkBackfillIndexer
 {
@@ -45,7 +45,7 @@ final class BulkBackfillIndexer
         foreach ($post_ids as $post_id) {
             if (!PostFilter::is_eligible($post_id)) {
                 $repository->delete_post($post_id);
-                delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
+                delete_post_meta($post_id, RITRIEVER_POSTMETA_LAST_ERROR);
                 continue;
             }
 
@@ -63,11 +63,11 @@ final class BulkBackfillIndexer
             if (
                 get_post_meta(
                     $post_id,
-                    WP_RETRIEVER_POSTMETA_CONTENT_HASH,
+                    RITRIEVER_POSTMETA_CONTENT_HASH,
                     true,
                 ) === $hash
             ) {
-                delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
+                delete_post_meta($post_id, RITRIEVER_POSTMETA_LAST_ERROR);
                 continue;
             }
 
@@ -76,15 +76,15 @@ final class BulkBackfillIndexer
                 $repository->delete_post($post_id);
                 update_post_meta(
                     $post_id,
-                    WP_RETRIEVER_POSTMETA_CONTENT_HASH,
+                    RITRIEVER_POSTMETA_CONTENT_HASH,
                     $hash,
                 );
                 update_post_meta(
                     $post_id,
-                    WP_RETRIEVER_POSTMETA_INDEXED_AT,
+                    RITRIEVER_POSTMETA_INDEXED_AT,
                     time(),
                 );
-                delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
+                delete_post_meta($post_id, RITRIEVER_POSTMETA_LAST_ERROR);
                 continue;
             }
 
@@ -118,7 +118,7 @@ final class BulkBackfillIndexer
             if (isset($failed[$post_id])) {
                 update_post_meta(
                     $post_id,
-                    WP_RETRIEVER_POSTMETA_LAST_ERROR,
+                    RITRIEVER_POSTMETA_LAST_ERROR,
                     (string) $failed[$post_id],
                 );
                 continue;
@@ -134,7 +134,7 @@ final class BulkBackfillIndexer
                     "Embedding response count did not match chunk count.";
                 update_post_meta(
                     $post_id,
-                    WP_RETRIEVER_POSTMETA_LAST_ERROR,
+                    RITRIEVER_POSTMETA_LAST_ERROR,
                     (string) $failed[$post_id],
                 );
                 continue;
@@ -158,15 +158,15 @@ final class BulkBackfillIndexer
         foreach ($ready_items as $post_id => $item) {
             update_post_meta(
                 $post_id,
-                WP_RETRIEVER_POSTMETA_CONTENT_HASH,
+                RITRIEVER_POSTMETA_CONTENT_HASH,
                 (string) $item["content_hash"],
             );
             update_post_meta(
                 $post_id,
-                WP_RETRIEVER_POSTMETA_INDEXED_AT,
+                RITRIEVER_POSTMETA_INDEXED_AT,
                 time(),
             );
-            delete_post_meta($post_id, WP_RETRIEVER_POSTMETA_LAST_ERROR);
+            delete_post_meta($post_id, RITRIEVER_POSTMETA_LAST_ERROR);
         }
 
         if ($ready_items !== []) {
