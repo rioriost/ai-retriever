@@ -25,7 +25,7 @@ else
 fi
 
 URL="http://${HOST}:${PORT}"
-SEARCH_FILE="/tmp/wp-retriever-${STACK}-search.html"
+SEARCH_FILE="/tmp/ai-retriever-${STACK}-search.html"
 
 run_wp() {
   $COMPOSE run --rm "$WPCLI_SERVICE" --path=/var/www/html "$@"
@@ -41,7 +41,7 @@ run_sql() {
 
 $COMPOSE up -d embedding-mock "$DB_SERVICE" "$WP_SERVICE" >/dev/null
 curl -fsS "http://${HOST}:${RETRIEVER_EMBEDDING_PORT:-18080}/health" >/dev/null
-run_wp plugin status wp-retriever >/dev/null
+run_wp plugin status ai-retriever >/dev/null
 
 HTTP_CODE=$(curl -fsS -o "$SEARCH_FILE" -w "%{http_code}" "${URL}/?s=vector")
 if [ "$HTTP_CODE" != "200" ]; then
@@ -64,7 +64,7 @@ if [ "$STACK" = "mariadb" ]; then
 
   ERRORS=$(run_sql "SELECT COUNT(*) FROM wp_postmeta WHERE meta_key = '_wp_retriever_last_error';")
   if [ "$ERRORS" -ne 0 ]; then
-    echo "Expected zero WP Retriever indexing errors, got ${ERRORS}." >&2
+    echo "Expected zero AI Retriever indexing errors, got ${ERRORS}." >&2
     exit 1
   fi
 

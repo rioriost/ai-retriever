@@ -51,9 +51,11 @@ final class PostSync
                 "sha256",
                 $text .
                     "|" .
-                    $embedder->model() .
+                LanguageOptions::selected_locale() .
                     "|" .
-                    (string) Settings::get("embedding_dimensions"),
+                $embedder->model() .
+                "|" .
+                (string) Settings::get("embedding_dimensions"),
             );
             if (
                 get_post_meta(
@@ -66,7 +68,9 @@ final class PostSync
                 return;
             }
             $chunks = self::chunk_text($text);
-            $embeddings = $embedder->embed_many($chunks);
+            $embeddings = $embedder->embed_many(
+                self::embedding_texts_for_chunks($chunks),
+            );
             $repository = new LocalVectorRepository();
             $repository->replace_post_embeddings(
                 $post_id,
@@ -206,6 +210,17 @@ final class PostSync
                 $chunks,
                 static fn(string $chunk): bool => trim($chunk) !== "",
             ),
+        );
+    }
+
+    /** @param string[] $chunks @return string[] */
+    public static function embedding_texts_for_chunks(array $chunks): array
+    {
+        return array_map(
+            static fn(string $chunk): string => LanguageOptions::with_embedding_context(
+                $chunk,
+            ),
+            $chunks,
         );
     }
 }

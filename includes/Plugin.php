@@ -38,8 +38,6 @@ final class Plugin
         Settings::install_or_upgrade();
         VectorSchema::install_or_upgrade();
         BackfillQueueSchema::install_or_upgrade();
-        $this->load_textdomain();
-
         PostSync::register();
         SearchInterceptor::register();
         BackfillRunner::register();
@@ -74,6 +72,7 @@ final class Plugin
 
         $schema_keys = [
             "embedding_provider",
+            "target_locale",
             "openai_embedding_model",
             "custom_embedding_model",
             "custom_embedding_preset",
@@ -117,15 +116,4 @@ final class Plugin
         }
     }
 
-    private function load_textdomain(): void
-    {
-        if (function_exists("load_plugin_textdomain")) {
-            load_plugin_textdomain(
-                "wp-retriever",
-                false,
-                dirname(plugin_basename(WP_RETRIEVER_PLUGIN_FILE)) .
-                    "/languages",
-            );
-        }
-    }
 }

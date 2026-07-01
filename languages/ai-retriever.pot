@@ -1,0 +1,351 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: AI Retriever\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ai-retriever\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: ai-retriever\n"
+
+msgid "Actions"
+msgstr ""
+
+msgid "Adjust how broadly vector retrieval contributes to search results. If RAG is matching too many unrelated posts, lower the candidate count or raise the minimum score."
+msgstr ""
+
+msgid "Admins only"
+msgstr ""
+
+msgid "AI Retriever"
+msgstr ""
+
+msgid "AI Retriever requires PHP 8.0 or higher."
+msgstr ""
+
+msgid "API key is configured"
+msgstr ""
+
+msgid "Automatic indexing is running..."
+msgstr ""
+
+msgid "Automatic indexing is running. You can leave this page open; if you close it, indexing will resume when you return and may also continue through WP-Cron where available."
+msgstr ""
+
+msgid "Best chunk snippet"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Cancel initialization? Already indexed chunks may remain until you initialize again."
+msgstr ""
+
+msgid "Changing the embedding model recreates the vector table and requires initialization again."
+msgstr ""
+
+msgid "Choose the WordPress-supported language that this RAG index should target. The list is loaded from the WordPress translation API so it follows current core language support."
+msgstr ""
+
+msgid "Coverage"
+msgstr ""
+
+msgid "Create a temporary 3-dimensional vector table, insert probe rows, run EXPLAIN, run a nearest-neighbor query, then drop the probe table."
+msgstr ""
+
+msgid "Create embeddings for existing published content and store them in the local vector table."
+msgstr ""
+
+msgid "Custom embedding API key"
+msgstr ""
+
+msgid "Custom embedding endpoint"
+msgstr ""
+
+msgid "Custom fields to index"
+msgstr ""
+
+msgid "Database"
+msgstr ""
+
+msgid "Database capability test"
+msgstr ""
+
+msgid "DB vector test failed: %s"
+msgstr ""
+
+msgid "DB vector test passed. Family: %1$s, index used: %2$s, nearest: %3$s, distance: %4$s. %5$s"
+msgstr ""
+
+msgid "Dimensions"
+msgstr ""
+
+msgid "Display source badges"
+msgstr ""
+
+msgid "Eligible posts"
+msgstr ""
+
+msgid "Embedding model"
+msgstr ""
+
+msgid "Embedding provider"
+msgstr ""
+
+msgid "Embedding provider test"
+msgstr ""
+
+msgid "Embedding settings changed. Run initialization again."
+msgstr ""
+
+msgid "Embedding test failed: %s"
+msgstr ""
+
+msgid "Embedding test succeeded. Provider: %1$s, model: %2$s, dimensions: %3$d, elapsed: %4$d ms."
+msgstr ""
+
+msgid "Enable Japanese query normalization"
+msgstr ""
+
+msgid "Enter a query before running the vector test."
+msgstr ""
+
+msgid "Enter a test query"
+msgstr ""
+
+msgid "Error"
+msgstr ""
+
+msgid "Expands lexical search with width/case variants and normalizes vector test/search queries. This can improve matching for full-width/half-width Japanese and alphanumeric text."
+msgstr ""
+
+msgid "Failed indexing list"
+msgstr ""
+
+msgid "Failed posts"
+msgstr ""
+
+msgid "Forbidden"
+msgstr ""
+
+msgid "For Custom HTTP providers, set this to match the returned embedding dimensions."
+msgstr ""
+
+msgid "Full"
+msgstr ""
+
+msgid "Index diagnostics"
+msgstr ""
+
+msgid "Indexed posts"
+msgstr ""
+
+msgid "Initialization"
+msgstr ""
+
+msgid "Initialization completed. Processed %d posts."
+msgstr ""
+
+msgid "Initialization failed. Check the plugin log."
+msgstr ""
+
+msgid "Initialization is complete. RAG search is ready."
+msgstr ""
+
+msgid "Initialization is not currently running."
+msgstr ""
+
+msgid "Initialization is paused."
+msgstr ""
+
+msgid "Initialization is unavailable because native vector support is not enabled for this database."
+msgstr ""
+
+msgid "Initialization processed %1$d posts but found %2$d errors. Check post meta/logs and run again."
+msgstr ""
+
+msgid "Initialization progress: %1$d / %2$d posts processed, %3$d errors."
+msgstr ""
+
+msgid "Initialization queued %d posts. Indexing will start automatically while this page is open."
+msgstr ""
+
+msgid "Initialization stopped after %1$d / %2$d posts with %3$d errors."
+msgstr ""
+
+msgid "Initialization stopped with errors. Check the plugin log and retry failed posts."
+msgstr ""
+
+msgid "Initialization was cancelled."
+msgstr ""
+
+msgid "Initialize"
+msgstr ""
+
+msgid "Initialized at %1$s. Processed %2$d posts with %3$d errors."
+msgstr ""
+
+msgid "Japanese normalization"
+msgstr ""
+
+msgid "Japanese query normalization settings"
+msgstr ""
+
+msgid "Leave blank to keep the existing key."
+msgstr ""
+
+msgid "Live vector query completed. Hits: %1$d, elapsed: %2$d ms."
+msgstr ""
+
+msgid "Live vector query failed: %s"
+msgstr ""
+
+msgid "Live vector query test"
+msgstr ""
+
+msgid "Manual custom HTTP settings"
+msgstr ""
+
+msgid "Maximum RAG candidates"
+msgstr ""
+
+msgid "Minimum RAG score"
+msgstr ""
+
+msgid "Native-vector RAG search for WordPress using MariaDB 11.7+ or compatible MySQL 9.x vector indexes. Embeds posts on publish/update and blends vector retrieval with standard WordPress search."
+msgstr ""
+
+msgid "Native vector support is unavailable for this database."
+msgstr ""
+
+msgid "no"
+msgstr ""
+
+msgid "No failed indexing records found."
+msgstr ""
+
+msgid "No vector hits returned."
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Only vector hits with this score or higher are used. Raise this to narrow RAG matches. Typical tuning range: 0.50-0.80."
+msgstr ""
+
+msgid "OpenAI API key"
+msgstr ""
+
+msgid "Optional. One meta key per line or comma-separated. Values are sent to the embedding provider, so do not include private fields unless intended."
+msgstr ""
+
+msgid "Optional. One taxonomy slug per line or comma-separated, for example category or post_tag."
+msgstr ""
+
+msgid "Pause"
+msgstr ""
+
+msgid "Presets fill endpoint, model, and dimensions. External hosted providers are limited to OpenAI/Azure OpenAI; these custom presets are for local or self-hosted services."
+msgstr ""
+
+msgid "Processed initialization batch. Progress: %1$d / %2$d."
+msgstr ""
+
+msgid "Provider/model preset"
+msgstr ""
+
+msgid "Provider: %1$s, model: %2$s, elapsed: %3$d ms."
+msgstr ""
+
+msgid "Queue status"
+msgstr ""
+
+msgid "RAG retrieval tuning"
+msgstr ""
+
+msgid "RAG search mode"
+msgstr ""
+
+msgid "RAG search settings"
+msgstr ""
+
+msgid "RAG target language"
+msgstr ""
+
+msgid "Request format"
+msgstr ""
+
+msgid "Resume"
+msgstr ""
+
+msgid "Retried failed indexing records. Processed: %1$d, remaining errors: %2$d."
+msgstr ""
+
+msgid "Retry"
+msgstr ""
+
+msgid "Retry all failed posts"
+msgstr ""
+
+msgid "Retry finished with remaining errors. Processed: %1$d, remaining errors: %2$d."
+msgstr ""
+
+msgid "Run one small embedding request with the current provider settings before starting initialization."
+msgstr ""
+
+msgid "Run the current vector retrieval pipeline for one query and inspect the top matching posts."
+msgstr ""
+
+msgid "Run vector query"
+msgstr ""
+
+msgid "Save Changes"
+msgstr ""
+
+msgid "Score"
+msgstr ""
+
+msgid "Site language (%s)"
+msgstr ""
+
+msgid "Standard search"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Taxonomies to index"
+msgstr ""
+
+msgid "Temporary initialization error: %s. Retrying shortly..."
+msgstr ""
+
+msgid "Test database vector support"
+msgstr ""
+
+msgid "Test embedding provider"
+msgstr ""
+
+msgid "text-embedding-3-large requires native vector support for 3072 dimensions. It is disabled for this database."
+msgstr ""
+
+msgid "The first initialization can take a long time, especially with many posts or a remote embedding API."
+msgstr ""
+
+msgid "This sends a short test string to OpenAI and may incur a small API charge."
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Upper limit of vector candidates before blending with core WordPress search. Smaller values narrow the retrieval range. Allowed range: 1-200."
+msgstr ""
+
+msgid "Vector chunks"
+msgstr ""
+
+msgid "Warning"
+msgstr ""
+
+msgid "yes"
+msgstr ""

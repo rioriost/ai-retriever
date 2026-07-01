@@ -54,9 +54,11 @@ final class BulkBackfillIndexer
                 "sha256",
                 $text .
                     "|" .
-                    $model .
+                        LanguageOptions::selected_locale() .
                     "|" .
-                    (string) Settings::get("embedding_dimensions"),
+                        $model .
+                        "|" .
+                        (string) Settings::get("embedding_dimensions"),
             );
             if (
                 get_post_meta(
@@ -195,6 +197,7 @@ final class BulkBackfillIndexer
                 static fn(array $job): string => (string) $job["text"],
                 $jobs,
             );
+            $texts = PostSync::embedding_texts_for_chunks($texts);
             $embeddings = $embedder->embed_many($texts);
             if (count($embeddings) !== count($jobs)) {
                 throw new \RuntimeException(

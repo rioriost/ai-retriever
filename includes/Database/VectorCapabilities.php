@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever\Database;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Capability probes intentionally create and query a temporary VECTOR table with internally controlled SQL fragments.
+
 final class VectorCapabilities
 {
     private function __construct() {}
@@ -172,7 +174,7 @@ final class VectorCapabilities
         if (!$cap["native_vector"]) {
             return 0;
         }
-        // WP Retriever currently caps vectors at 4096 dimensions. That covers
+        // AI Retriever currently caps vectors at 4096 dimensions. That covers
         // OpenAI text-embedding-3-large (3072) while keeping schema changes
         // conservative for native database vector indexes.
         return $cap["family"] === "mariadb" ? 4096 : 0;

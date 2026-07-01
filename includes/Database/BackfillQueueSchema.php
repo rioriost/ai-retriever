@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever\Database;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom queue table schema lifecycle requires explicit DDL with internally controlled table names.
+
 use WPRetriever\Logger;
 
 final class BackfillQueueSchema

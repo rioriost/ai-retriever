@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever\Database;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR inserts/searches need explicit SQL for VEC_FromText and distance functions with vetted identifiers.
+
 use WPRetriever\Settings;
 
 final class LocalVectorRepository
@@ -63,73 +65,72 @@ final class LocalVectorRepository
     {
         global $wpdb;
         $table = VectorSchema::table_name();
-        $rows = [];
 
-        $attempts = 0;
-        retry_write:
-        ++$attempts;
-        $rows = [];
+        for ($attempts = 1; $attempts <= 3; ++$attempts) {
+            $rows = [];
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
-        $wpdb->query("START TRANSACTION");
-        try {
-            foreach ($items as $item) {
-                $post_id = (int) ($item["post_id"] ?? 0);
-                $model = (string) ($item["model"] ?? "");
-                if ($post_id <= 0 || $model === "") {
-                    continue;
-                }
-
-                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-                $deleted = $wpdb->delete(
-                    $table,
-                    ["post_id" => $post_id, "embedding_model" => $model],
-                    ["%d", "%s"],
-                );
-                if ($deleted === false) {
-                    throw new \RuntimeException(
-                        "Failed to delete existing vector chunks: " .
-                            $wpdb->last_error,
-                    );
-                }
-
-                $chunks = is_array($item["chunks"] ?? null)
-                    ? $item["chunks"]
-                    : [];
-                $embeddings = is_array($item["embeddings"] ?? null)
-                    ? $item["embeddings"]
-                    : [];
-                foreach ($chunks as $i => $chunk) {
-                    $embedding = $embeddings[$i] ?? null;
-                    if (!is_array($embedding)) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
+            $wpdb->query("START TRANSACTION");
+            try {
+                foreach ($items as $item) {
+                    $post_id = (int) ($item["post_id"] ?? 0);
+                    $model = (string) ($item["model"] ?? "");
+                    if ($post_id <= 0 || $model === "") {
                         continue;
                     }
-                    $rows[] = [
-                        "post_id" => $post_id,
-                        "chunk_index" => (int) $i,
-                        "chunk_text" => self::clean_text((string) $chunk),
-                        "content_hash" =>
-                            (string) ($item["content_hash"] ?? ""),
-                        "embedding_model" => self::clean_text($model),
-                        "embedding" => self::vector_text($embedding),
-                    ];
+
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+                    $deleted = $wpdb->delete(
+                        $table,
+                        ["post_id" => $post_id, "embedding_model" => $model],
+                        ["%d", "%s"],
+                    );
+                    if ($deleted === false) {
+                        throw new \RuntimeException(
+                            "Failed to delete existing vector chunks: " .
+                                $wpdb->last_error,
+                        );
+                    }
+
+                    $chunks = is_array($item["chunks"] ?? null)
+                        ? $item["chunks"]
+                        : [];
+                    $embeddings = is_array($item["embeddings"] ?? null)
+                        ? $item["embeddings"]
+                        : [];
+                    foreach ($chunks as $i => $chunk) {
+                        $embedding = $embeddings[$i] ?? null;
+                        if (!is_array($embedding)) {
+                            continue;
+                        }
+                        $rows[] = [
+                            "post_id" => $post_id,
+                            "chunk_index" => (int) $i,
+                            "chunk_text" => self::clean_text((string) $chunk),
+                            "content_hash" =>
+                                (string) ($item["content_hash"] ?? ""),
+                            "embedding_model" => self::clean_text($model),
+                            "embedding" => self::vector_text($embedding),
+                        ];
+                    }
                 }
-            }
 
-            foreach (array_chunk($rows, 100) as $row_batch) {
-                self::insert_rows($table, $row_batch);
-            }
+                foreach (array_chunk($rows, 100) as $row_batch) {
+                    self::insert_rows($table, $row_batch);
+                }
 
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
-            $wpdb->query("COMMIT");
-        } catch (\Throwable $e) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
-            $wpdb->query("ROLLBACK");
-            if ($attempts < 3 && self::is_transient_database_error($e)) {
-                usleep(250000 * $attempts);
-                goto retry_write;
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
+                $wpdb->query("COMMIT");
+                return;
+            } catch (\Throwable $e) {
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Transaction control.
+                $wpdb->query("ROLLBACK");
+                if ($attempts < 3 && self::is_transient_database_error($e)) {
+                    usleep(250000 * $attempts);
+                    continue;
+                }
+                throw $e;
             }
-            throw $e;
         }
     }
 
@@ -161,8 +162,9 @@ final class LocalVectorRepository
             ...$args,
         );
         // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above; VECTOR expression cannot be represented via wpdb insert.
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above; VECTOR expression cannot be represented via wpdb insert.
         $inserted = $wpdb->query($sql);
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         if ($inserted === false) {
             throw new \RuntimeException(
                 "Failed to insert vector chunks: " .
@@ -218,8 +220,9 @@ final class LocalVectorRepository
             $model,
             $chunk_limit,
         );
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above and includes a vetted distance function name.
+        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above and includes a vetted distance function name.
         $rows = $wpdb->get_results($sql, ARRAY_A);
+        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         $best_by_post = [];
         foreach (is_array($rows) ? $rows : [] as $row) {
             $post_id = (int) ($row["post_id"] ?? 0);

@@ -16,7 +16,8 @@ final class Settings
         "search_mode" => "off", // off|a_b_admin|full.
         "sync_enabled" => true,
         "kill_switch_global" => false,
-        "embedding_provider" => "openai", // openai|azure_openai|mistral|jina|voyage|cohere|ollama|infinity|tei|lmstudio|custom_http.
+        "target_locale" => "site",
+        "embedding_provider" => "openai", // openai|azure_openai|ollama|infinity|tei|lmstudio|custom_http.
         "openai_api_key" => "",
         "openai_embedding_model" => "text-embedding-3-small",
         "custom_embedding_endpoint" => "",
@@ -51,10 +52,6 @@ final class Settings
         "embedding_provider" => [
             "openai",
             "azure_openai",
-            "mistral",
-            "jina",
-            "voyage",
-            "cohere",
             "ollama",
             "infinity",
             "tei",
@@ -65,12 +62,6 @@ final class Settings
             "custom",
             "azure_openai_3_small",
             "azure_openai_3_large",
-            "mistral_embed",
-            "jina_v3",
-            "voyage_3_large",
-            "voyage_3",
-            "cohere_embed_v4",
-            "cohere_multilingual_v3",
             "ollama_nomic",
             "ollama_mxbai",
             "infinity_bge_m3",
@@ -81,8 +72,6 @@ final class Settings
         "custom_embedding_format" => [
             "openai_compatible",
             "ollama",
-            "voyage",
-            "cohere",
             "azure_openai",
         ],
         "vector_distance" => ["cosine", "euclidean"],
@@ -222,6 +211,9 @@ final class Settings
                 }
             }
         }
+        $out["target_locale"] = LanguageOptions::sanitize_locale(
+            (string) $out["target_locale"],
+        );
         $out["initial_backfill_completed_at"] = max(
             0,
             (int) $out["initial_backfill_completed_at"],
@@ -310,54 +302,6 @@ final class Settings
                 "model" => "text-embedding-3-large",
                 "dimensions" => 3072,
                 "format" => "azure_openai",
-            ],
-            "mistral_embed" => [
-                "provider" => "mistral",
-                "label" => "mistral-embed (1024)",
-                "endpoint" => "https://api.mistral.ai/v1/embeddings",
-                "model" => "mistral-embed",
-                "dimensions" => 1024,
-                "format" => "openai_compatible",
-            ],
-            "jina_v3" => [
-                "provider" => "jina",
-                "label" => "jina-embeddings-v3 (1024)",
-                "endpoint" => "https://api.jina.ai/v1/embeddings",
-                "model" => "jina-embeddings-v3",
-                "dimensions" => 1024,
-                "format" => "openai_compatible",
-            ],
-            "voyage_3_large" => [
-                "provider" => "voyage",
-                "label" => "voyage-3-large (1024)",
-                "endpoint" => "https://api.voyageai.com/v1/embeddings",
-                "model" => "voyage-3-large",
-                "dimensions" => 1024,
-                "format" => "voyage",
-            ],
-            "voyage_3" => [
-                "provider" => "voyage",
-                "label" => "voyage-3 (1024)",
-                "endpoint" => "https://api.voyageai.com/v1/embeddings",
-                "model" => "voyage-3",
-                "dimensions" => 1024,
-                "format" => "voyage",
-            ],
-            "cohere_embed_v4" => [
-                "provider" => "cohere",
-                "label" => "embed-v4.0 (1536)",
-                "endpoint" => "https://api.cohere.com/v2/embed",
-                "model" => "embed-v4.0",
-                "dimensions" => 1536,
-                "format" => "cohere",
-            ],
-            "cohere_multilingual_v3" => [
-                "provider" => "cohere",
-                "label" => "embed-multilingual-v3.0 (1024)",
-                "endpoint" => "https://api.cohere.com/v1/embed",
-                "model" => "embed-multilingual-v3.0",
-                "dimensions" => 1024,
-                "format" => "cohere",
             ],
             "ollama_nomic" => [
                 "provider" => "ollama",

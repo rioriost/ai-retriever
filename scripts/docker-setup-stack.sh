@@ -56,7 +56,7 @@ done
 if ! run_wp core is-installed >/dev/null 2>&1; then
   run_wp core install \
     --url="$URL" \
-    --title="WP Retriever ${STACK}" \
+    --title="AI Retriever ${STACK}" \
     --admin_user="$ADMIN_USER" \
     --admin_password="$ADMIN_PASSWORD" \
     --admin_email="$ADMIN_EMAIL" \
@@ -65,15 +65,15 @@ fi
 
 # Write settings before activation so the activation-created vector table uses
 # the same dimensions as the local embedding mock.
-run_wp plugin deactivate wp-retriever >/dev/null 2>&1 || true
+run_wp plugin deactivate ai-retriever >/dev/null 2>&1 || true
 run_wp option update wp_retriever_settings "$SETTINGS_JSON" --format=json >/dev/null
-run_wp plugin activate wp-retriever
+run_wp plugin activate ai-retriever
 
 run_wp post create \
   --post_type=post \
   --post_status=publish \
   --post_title="MariaDB vector search smoke test" \
-  --post_content="WP Retriever stores local embeddings in a native database vector column and blends semantic retrieval with standard WordPress search." \
+  --post_content="AI Retriever stores local embeddings in a native database vector column and blends semantic retrieval with standard WordPress search." \
   >/dev/null
 
 run_wp post create \

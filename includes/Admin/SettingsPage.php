@@ -13,6 +13,7 @@ use WPRetriever\BackfillRunner;
 use WPRetriever\Database\VectorCapabilities;
 use WPRetriever\Embedding\EmbeddingProviderFactory;
 use WPRetriever\IndexDiagnostics;
+use WPRetriever\LanguageOptions;
 use WPRetriever\Logger;
 use WPRetriever\PostSync;
 use WPRetriever\Provider\LocalVectorProvider;
@@ -74,8 +75,8 @@ final class SettingsPage
     public static function menu(): void
     {
         add_options_page(
-            "WP Retriever",
-            "WP Retriever",
+            "AI Retriever",
+            "AI Retriever",
             (string) WP_RETRIEVER_ADMIN_CAPABILITY,
             self::PAGE_SLUG,
             [self::class, "render"],
@@ -263,7 +264,7 @@ final class SettingsPage
             $started = microtime(true);
             $provider = EmbeddingProviderFactory::make();
             $embedding = $provider->embed(
-                "WP Retriever embedding provider test",
+                "AI Retriever embedding provider test",
             );
             $elapsed_ms = (int) round((microtime(true) - $started) * 1000);
             if ($embedding === []) {
@@ -432,7 +433,7 @@ final class SettingsPage
         $initialized = (int) $opts["initial_backfill_completed_at"] > 0;
         ?>
 		<div class="wrap">
-			<h1>WP Retriever</h1>
+			<h1>AI Retriever</h1>
 			<?php self::render_notice(); ?>
 			<p><strong><?php echo esc_html(
        self::text("database"),
@@ -476,7 +477,29 @@ final class SettingsPage
            WP_RETRIEVER_OPTION_KEY,
        ); ?>[display_source_badges]" value="1" <?php checked(
     $opts["display_source_badges"],
-); ?>> [RAG] / [標準検索]</label>
+); ?>> [RAG] / [<?php echo esc_html(
+    self::text("standard_search"),
+); ?>]</label>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="wp-retriever-target-locale"><?php echo esc_html(
+          self::text("target_language"),
+      ); ?></label></th>
+						<td>
+							<select id="wp-retriever-target-locale" name="<?php echo esc_attr(
+           WP_RETRIEVER_OPTION_KEY,
+       ); ?>[target_locale]">
+								<?php foreach (LanguageOptions::options() as $locale => $label): ?>
+									<option value="<?php echo esc_attr($locale); ?>" <?php selected(
+    (string) $opts["target_locale"],
+    $locale,
+); ?>><?php echo esc_html($label); ?></option>
+								<?php endforeach; ?>
+							</select>
+							<p class="description"><?php echo esc_html(
+           self::text("target_language_note"),
+       ); ?></p>
 						</td>
 					</tr>
 
@@ -492,15 +515,11 @@ final class SettingsPage
             [
                 "openai" => "OpenAI",
                 "azure_openai" => "Azure OpenAI",
-                "mistral" => "Mistral",
-                "jina" => "Jina AI",
-                "voyage" => "Voyage AI",
-                "cohere" => "Cohere",
                 "ollama" => "Ollama",
                 "lmstudio" => "LM Studio",
                 "infinity" => "Infinity",
                 "tei" => "TEI",
-                "custom_http" => "Custom HTTP",
+                "custom_http" => "Custom HTTP (local/self-hosted)",
             ]
             as $provider_key => $provider_label
         ): ?>
@@ -556,7 +575,7 @@ final class SettingsPage
        ); ?></p>
 						</td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-custom-preset"><?php echo esc_html(
           self::text("custom_embedding_preset"),
       ); ?></label></th>
@@ -592,7 +611,7 @@ final class SettingsPage
        ); ?></p>
 						</td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-custom-format"><?php echo esc_html(
           self::text("custom_embedding_format"),
       ); ?></label></th>
@@ -602,7 +621,7 @@ final class SettingsPage
     (string) $opts["custom_embedding_format"],
 ); ?>" readonly></td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-custom-endpoint"><?php echo esc_html(
           self::text("custom_endpoint"),
       ); ?></label></th>
@@ -612,7 +631,7 @@ final class SettingsPage
     (string) $opts["custom_embedding_endpoint"],
 ); ?>"></td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-custom-key"><?php echo esc_html(
           self::text("custom_api_key"),
       ); ?></label></th>
@@ -629,7 +648,7 @@ final class SettingsPage
        ); ?></p>
 						</td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-custom-model"><?php echo esc_html(
           self::text("embedding_model"),
       ); ?></label></th>
@@ -639,7 +658,7 @@ final class SettingsPage
     (string) $opts["custom_embedding_model"],
 ); ?>"></td>
 					</tr>
-					<tr data-provider-row="azure_openai mistral jina voyage cohere ollama lmstudio infinity tei custom_http">
+					<tr data-provider-row="azure_openai ollama lmstudio infinity tei custom_http">
 						<th scope="row"><label for="wp-retriever-dimensions"><?php echo esc_html(
           self::text("dimensions"),
       ); ?></label></th>
@@ -1396,8 +1415,14 @@ final class SettingsPage
     {
         $ja = str_starts_with(strtolower((string) get_locale()), "ja");
         $copy = self::copy();
-        $lang = $ja ? "ja" : "en";
-        return $copy[$lang][$key] ?? ($copy["en"][$key] ?? $key);
+        $english = $copy["en"][$key] ?? $key;
+        $translated = get_translations_for_domain("ai-retriever")->translate(
+            $english,
+        );
+        if ($translated !== $english || !$ja) {
+            return $translated;
+        }
+        return $copy["ja"][$key] ?? $english;
     }
 
     /** @return array{en:array<string,string>, ja:array<string,string>} */
@@ -1467,6 +1492,10 @@ final class SettingsPage
                 "search_mode_a_b_admin" => "Admins only",
                 "search_mode_full" => "Full",
                 "display_badges" => "Display source badges",
+                "standard_search" => "Standard search",
+                "target_language" => "RAG target language",
+                "target_language_note" =>
+                    "Choose the WordPress-supported language that this RAG index should target. The list is loaded from the WordPress translation API so it follows current core language support.",
                 "japanese_normalization" => "Japanese normalization",
                 "enable_japanese_normalization" =>
                     "Enable Japanese query normalization",
@@ -1492,7 +1521,7 @@ final class SettingsPage
                 "custom_embedding_format" => "Request format",
                 "custom_preset_manual" => "Manual custom HTTP settings",
                 "custom_embedding_preset_note" =>
-                    "Presets fill endpoint, model, and dimensions. Confirm the local service is running before testing.",
+                    "Presets fill endpoint, model, and dimensions. External hosted providers are limited to OpenAI/Azure OpenAI; these custom presets are for local or self-hosted services.",
                 "custom_endpoint" => "Custom embedding endpoint",
                 "custom_api_key" => "Custom embedding API key",
                 "api_key_configured" => "API key is configured",
@@ -1615,6 +1644,10 @@ final class SettingsPage
                 "search_mode_a_b_admin" => "管理者のみ",
                 "search_mode_full" => "フル",
                 "display_badges" => "検索元バッジを表示",
+                "standard_search" => "標準検索",
+                "target_language" => "RAG 検索対象言語",
+                "target_language_note" =>
+                    "この RAG インデックスが対象とする言語を、WordPress が対応する言語から選びます。一覧は WordPress の翻訳 API から取得するため、現在のコア対応言語に追従します。",
                 "japanese_normalization" => "日本語クエリー正規化",
                 "enable_japanese_normalization" => "日本語クエリー正規化",
                 "japanese_normalization_note" =>
@@ -1640,7 +1673,7 @@ final class SettingsPage
                 "custom_embedding_format" => "リクエスト形式",
                 "custom_preset_manual" => "手動設定",
                 "custom_embedding_preset_note" =>
-                    "候補を選び、必要ならエンドポイント、モデル、次元数を入力してください。ローカルサービスの場合は、テスト前に起動していることを確認してください。",
+                    "候補を選び、必要ならエンドポイント、モデル、次元数を入力してください。外部 hosted provider は OpenAI/Azure OpenAI に限定し、ここではローカルまたは self-hosted サービスを想定しています。",
                 "custom_endpoint" => "埋め込みエンドポイント",
                 "custom_api_key" => "埋め込み API キー",
                 "api_key_configured" => "API キー設定済み",

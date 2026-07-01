@@ -36,7 +36,7 @@ SQL
     $COMPOSE up -d db-mysql >/dev/null
     $COMPOSE exec -T db-mysql mysql -uwordpress -pwordpress wordpress <<'SQL'
 SELECT VERSION() AS version;
-SELECT 'MySQL vector dialect is intentionally not assumed by WP Retriever yet.' AS note;
+SELECT 'MySQL vector dialect is intentionally not assumed by AI Retriever yet.' AS note;
 SQL
     ;;
   *)

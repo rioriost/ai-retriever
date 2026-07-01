@@ -92,21 +92,6 @@ final class CustomHttpEmbeddingProvider implements EmbeddingProviderInterface
         string $model,
         array $texts,
     ): array {
-        if ($format === "cohere") {
-            return [
-                "model" => $model,
-                "texts" => $texts,
-                "input_type" => "search_document",
-                "embedding_types" => ["float"],
-            ];
-        }
-        if ($format === "voyage") {
-            return [
-                "model" => $model,
-                "input" => $texts,
-                "input_type" => "document",
-            ];
-        }
         if ($format === "azure_openai") {
             $body = ["input" => $texts];
             $dimensions = (int) Settings::get("embedding_dimensions");

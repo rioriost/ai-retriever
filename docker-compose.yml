@@ -54,7 +54,7 @@ services:
       - "${RETRIEVER_WP_MARIADB_PORT:-8081}:80"
     volumes:
       - retriever_wp_mariadb_html:/var/www/html
-      - ./:/var/www/html/wp-content/plugins/wp-retriever:rw
+      - ./:/var/www/html/wp-content/plugins/ai-retriever:rw
 
   wpcli-mariadb:
     image: wordpress:cli-php8.3
@@ -70,7 +70,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     volumes:
       - retriever_wp_mariadb_html:/var/www/html
-      - ./:/var/www/html/wp-content/plugins/wp-retriever:rw
+      - ./:/var/www/html/wp-content/plugins/ai-retriever:rw
     profiles: ["tools"]
 
   db-mysql:
@@ -117,7 +117,7 @@ services:
       - "${RETRIEVER_WP_MYSQL_PORT:-8082}:80"
     volumes:
       - retriever_wp_mysql_html:/var/www/html
-      - ./:/var/www/html/wp-content/plugins/wp-retriever:rw
+      - ./:/var/www/html/wp-content/plugins/ai-retriever:rw
 
   wpcli-mysql:
     image: wordpress:cli-php8.3
@@ -133,7 +133,7 @@ services:
       WORDPRESS_DB_PASSWORD: wordpress
     volumes:
       - retriever_wp_mysql_html:/var/www/html
-      - ./:/var/www/html/wp-content/plugins/wp-retriever:rw
+      - ./:/var/www/html/wp-content/plugins/ai-retriever:rw
     profiles: ["tools"]
 
 volumes:

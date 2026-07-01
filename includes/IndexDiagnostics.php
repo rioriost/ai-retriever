@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Diagnostics read custom vector/index metadata on demand; these values are volatile and not useful to cache.
+
 use WPRetriever\Database\VectorSchema;
 
 final class IndexDiagnostics

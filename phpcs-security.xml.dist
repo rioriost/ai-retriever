@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
-<ruleset name="WP Retriever Security Scan">
+<ruleset name="AI Retriever Security Scan">
 	<description
     >Security-focused PHPCS scan using WordPress Coding Standards, WordPress VIP, and PHPCompatibilityWP.</description>
 
-	<file>wp-retriever.php</file>
+	<file>ai-retriever.php</file>
 	<file>uninstall.php</file>
 	<file>includes</file>
 

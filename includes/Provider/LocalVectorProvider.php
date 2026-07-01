@@ -5,6 +5,7 @@ namespace WPRetriever\Provider;
 
 use WPRetriever\Database\LocalVectorRepository;
 use WPRetriever\Embedding\EmbeddingProviderFactory;
+use WPRetriever\LanguageOptions;
 use WPRetriever\Settings;
 use WPRetriever\TextNormalizer;
 
@@ -14,7 +15,11 @@ final class LocalVectorProvider
     {
         try {
             $embedder = EmbeddingProviderFactory::make();
-            $embedding = $embedder->embed(TextNormalizer::vector_query($query));
+            $embedding = $embedder->embed(
+                LanguageOptions::with_embedding_context(
+                    TextNormalizer::vector_query($query),
+                ),
+            );
             $results = (new LocalVectorRepository())->search_with_chunks(
                 $embedding,
                 $embedder->model(),

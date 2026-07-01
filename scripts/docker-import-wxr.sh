@@ -35,10 +35,10 @@ fi
 
 case "$WXR_PATH" in
   ./*)
-    CONTAINER_WXR="/var/www/html/wp-content/plugins/wp-retriever/${WXR_PATH#./}"
+    CONTAINER_WXR="/var/www/html/wp-content/plugins/ai-retriever/${WXR_PATH#./}"
     ;;
   *)
-    CONTAINER_WXR="/var/www/html/wp-content/plugins/wp-retriever/${WXR_PATH}"
+    CONTAINER_WXR="/var/www/html/wp-content/plugins/ai-retriever/${WXR_PATH}"
     ;;
 esac
 

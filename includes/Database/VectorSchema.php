@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever\Database;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR DDL and index maintenance require explicit database statements with internally controlled identifiers/settings.
+
 use WPRetriever\Logger;
 use WPRetriever\Settings;
 

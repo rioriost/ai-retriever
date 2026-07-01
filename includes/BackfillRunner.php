@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter,Squiz.PHP.DiscouragedFunctions.Discouraged -- Backfill jobs are stored in custom queue tables and require atomic SQL updates that are not covered by WordPress cache APIs.
+
 use WPRetriever\Database\BackfillQueueSchema;
 use WPRetriever\Database\VectorSchema;
 

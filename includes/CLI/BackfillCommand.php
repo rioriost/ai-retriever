@@ -24,7 +24,7 @@ final class BackfillCommand
     }
 
     /**
-     * Manage the WP Retriever background indexing queue.
+     * Manage the AI Retriever background indexing queue.
      *
      * ## OPTIONS
      *

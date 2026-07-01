@@ -1,5 +1,5 @@
 {
-  "name": "riost/wp-retriever",
+  "name": "riost/ai-retriever",
   "description": "Native-vector RAG search for WordPress.",
   "type": "wordpress-plugin",
   "require": {

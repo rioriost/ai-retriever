@@ -1,6 +1,6 @@
 # Local Docker test environment
 
-This directory supports two isolated WordPress stacks for WP Retriever development on the MacStudio Docker Desktop host.
+This directory supports two isolated WordPress stacks for AI Retriever development on the MacStudio Docker Desktop host.
 
 ## Stacks
 
@@ -55,7 +55,7 @@ Use this when changing vector dimensions or database versions:
 
 ## Notes
 
-- The plugin is bind-mounted into both WordPress containers as `wp-retriever`.
+- The plugin is bind-mounted into both WordPress containers as `ai-retriever`.
 - The setup script configures `custom_http` embeddings with a deterministic local mock, so no OpenAI API key is needed for smoke tests.
 - MariaDB should be treated as the implementation target first. MySQL can remain unsupported if vector type/index/function behavior is incomplete or unstable.
 - WXR exports are local test data. Do not commit them; delete them after import when they are no longer needed.

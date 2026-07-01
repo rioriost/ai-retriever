@@ -1,18 +1,20 @@
 <?php
 /**
- * Uninstall cleanup for WP Retriever.
+ * Uninstall cleanup for AI Retriever.
  *
  * @package WPRetriever
  */
 
 declare(strict_types=1);
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Uninstall cleanup must remove plugin-owned options, metadata, transients, and custom tables across sites without caching.
+
 if (!defined("WP_UNINSTALL_PLUGIN")) {
     exit();
 }
 
 /**
- * Remove all WP Retriever data for the current site.
+ * Remove all AI Retriever data for the current site.
  */
 function wp_retriever_uninstall_site(): void
 {
@@ -54,7 +56,7 @@ function wp_retriever_uninstall_site(): void
 }
 
 /**
- * Remove WP Retriever transients for the current site.
+ * Remove AI Retriever transients for the current site.
  */
 function wp_retriever_delete_transients(string $prefix): void
 {
@@ -89,7 +91,7 @@ function wp_retriever_delete_transients(string $prefix): void
 }
 
 /**
- * Remove pending WP Retriever cron events for the current site.
+ * Remove pending AI Retriever cron events for the current site.
  */
 function wp_retriever_unschedule_site_cron(): void
 {

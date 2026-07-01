@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace WPRetriever;
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching -- Query cache purging needs to enumerate matching transient option rows before deleting them through WordPress APIs.
+
 use WPRetriever\Provider\LocalVectorProvider;
 
 final class SearchInterceptor
@@ -81,7 +83,8 @@ final class SearchInterceptor
         );
         $combined = self::merge_ranked_ids($rag_ids, $core_ids);
         if ($combined === []) {
-            self::$processed_queries[$qid] = "fallback";
+            self::rewrite_query_to_no_results($query, $user_query);
+            self::$processed_queries[$qid] = "rewritten";
             return;
         }
         $sources = self::build_source_map($combined, $rag_ids, $core_ids);
@@ -327,6 +330,13 @@ final class SearchInterceptor
         $query->set("no_found_rows", false);
     }
 
+    private static function rewrite_query_to_no_results(
+        \WP_Query $query,
+        string $user_query,
+    ): void {
+        self::rewrite_query($query, $user_query, [0]);
+    }
+
     private static function source_for_render_post(int $post_id): ?string
     {
         if ($post_id <= 0 && function_exists("get_the_ID")) {
@@ -355,7 +365,7 @@ final class SearchInterceptor
             $labels[] = "RAG";
         }
         if ($source === "core" || $source === "both") {
-            $labels[] = "標準検索";
+            $labels[] = self::standard_search_label();
         }
         $html =
             '<span class="wp-retriever-hit-badges" style="display:block;font-size:.72em;font-weight:400;line-height:1.4;margin:0 0 .15em;color:#666;">';
@@ -366,6 +376,21 @@ final class SearchInterceptor
                 "]</span>";
         }
         return $html . "</span>";
+    }
+
+    private static function standard_search_label(): string
+    {
+        $english = "Standard search";
+        $translated = get_translations_for_domain("ai-retriever")->translate(
+            $english,
+        );
+        if (
+            $translated === $english &&
+            str_starts_with(strtolower((string) get_locale()), "ja")
+        ) {
+            return "標準検索";
+        }
+        return $translated;
     }
 
     private static function cache_key(
@@ -380,7 +405,13 @@ final class SearchInterceptor
             substr(
                 hash(
                     "sha256",
-                    self::CACHE_VERSION . "|" . $query . "|" . $context,
+                    self::CACHE_VERSION .
+                        "|" .
+                        (string) Settings::get("target_locale") .
+                        "|" .
+                        $query .
+                        "|" .
+                        $context,
                 ),
                 0,
                 32,

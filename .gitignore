@@ -26,6 +26,10 @@ build/
 # Local Docker environment overrides. Keep .env.example tracked.
 .env
 
+# Local review notes, WXR imports, and plugin-directory email archives.
+tmp/
+*.WordPress.*.xml
+
 # PHP local artifacts (none currently produced, but easy to acquire
 # accidentally during local debugging or future composer adoption).
 /vendor/
