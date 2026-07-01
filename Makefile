@@ -49,6 +49,8 @@ i18n-pot-check:
 
 release-audit:
 	grep -q '^ \* Plugin Name:       RiTriever$$' $(PLUGIN_FILE)
+	grep -q '^ \* Text Domain:       $(PLUGIN_SLUG)$$' $(PLUGIN_FILE)
+	grep -q '^=== RiTriever ===$$' readme.txt
 	grep -q '^Stable tag: $(PLUGIN_VERSION)$$' readme.txt
 	test -f $(POT_FILE)
 	test -f readme.txt
@@ -56,10 +58,18 @@ release-audit:
 
 review-audit:
 	! grep -RInE 'WPRetriever|WP_RETRIEVER|wp_retriever|wp-retriever|wpRetriever|AI Retriever|ai-retriever' -- $(PLUGIN_FILE) uninstall.php includes assets languages readme.txt README.md composer.json phpcs-security.xml.dist scripts
-	! grep -RInE '<script[[:space:]>]' -- $(PLUGIN_FILE) uninstall.php includes
+	! grep -RInE 'wp_ajax_wp_|admin_post_wp_|wp_enqueue_script\("wp-' -- $(PLUGIN_FILE) includes assets
+	! grep -RInE '<script[[:space:]>]|<style[[:space:]>]' -- $(PLUGIN_FILE) uninstall.php includes
 	! grep -RInE 'wp_ai_client|WordPressAiEmbeddingProvider|generate_embeddings' -- $(PLUGIN_FILE) uninstall.php includes assets
+	! grep -RInE 'badge_html\([^)]*\) \. \$$title|badge_html\([^)]*\) \. \(string\) \$$title' includes/SearchInterceptor.php
 	grep -RIn 'wp_remote_post("https://api.openai.com/v1/embeddings"' includes/Embedding >/dev/null
-	grep -RIn '^== External services ==$$' readme.txt >/dev/null
+	grep -RIn 'WordPress 7.0.*AI Client.*embeddings API' readme.txt >/dev/null
+	grep -RIn 'OpenAI.*Terms of use https://openai.com/policies/terms-of-use/.*Privacy policy https://openai.com/policies/privacy-policy/' readme.txt >/dev/null
+	grep -RIn 'Azure OpenAI.*Terms of use https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA.*Privacy statement https://privacy.microsoft.com/privacystatement' readme.txt >/dev/null
+	grep -RIn 'Local or self-hosted endpoints.*Ollama.*LM Studio.*Infinity.*TEI.*Custom HTTP' readme.txt >/dev/null
+	grep -RIn 'private const CACHE_MAX_ENTRIES = 100;' includes/SearchInterceptor.php >/dev/null
+	grep -RIn 'remember_cache_key' includes/SearchInterceptor.php >/dev/null
+	grep -RIn 'delete_option(self::CACHE_INDEX_OPTION)' includes/SearchInterceptor.php >/dev/null
 
 static-check: composer-validate lint phpcs-security composer-audit compose-config i18n-pot-check release-audit review-audit
 
@@ -87,6 +97,7 @@ package-audit:
 	test -f $(ZIP_FILE)
 	unzip -l $(ZIP_FILE) | grep -q '$(PLUGIN_SLUG)/readme.txt'
 	unzip -l $(ZIP_FILE) | grep -q '$(PLUGIN_SLUG)/$(POT_FILE)'
+	! unzip -l $(ZIP_FILE) | grep -E 'ai-retriever|wp-retriever|wp_retriever' >/dev/null
 	! unzip -l $(ZIP_FILE) | grep -E '/(tmp|vendor|build|dist|\\.git)/' >/dev/null
 
 release: check
