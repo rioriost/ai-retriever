@@ -4,7 +4,7 @@ Tags: search, semantic search, vector search, embeddings, rag
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,9 @@ No screenshots are included in this release.
 
 == Changelog ==
 
+= 0.2.1 =
+* Tighten WordPress.org review gates and clarify external embedding API documentation.
+
 = 0.2.0 =
 * Rename the public plugin name and WordPress.org slug to RiTriever.
 * Add RAG target language selection based on WordPress-supported locales.
@@ -84,6 +87,9 @@ No screenshots are included in this release.
 * Add WordPress.org release gates for PHPCS, Plugin Check, readme, i18n, and package contents.
 
 == Upgrade Notice ==
+
+= 0.2.1 =
+Review-gate and documentation update. No reindexing is required.
 
 = 0.2.0 =
 Changing the target language or embedding settings requires reinitializing the vector index.

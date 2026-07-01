@@ -44,7 +44,7 @@ MariaDB 11.7 未満、MySQL 8.x はサポート対象外です。
 
 ### ZIP からインストール
 
-1. 配布 ZIP `ritriever-0.2.0.zip` を用意します。
+1. 配布 ZIP `ritriever-0.2.1.zip` を用意します。
 2. WordPress 管理画面で `プラグイン -> 新規追加 -> プラグインのアップロード` を開きます。
 3. ZIP をアップロードします。
 4. `RiTriever` を有効化します。
@@ -297,7 +297,7 @@ Plugin Check は WordPress が起動している環境で実行します。Apple
 
 出力例:
 
-- `dist/ritriever-0.2.0.zip`
+- `dist/ritriever-0.2.1.zip`
 
 ## 既知の制限
 
