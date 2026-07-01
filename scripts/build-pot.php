@@ -25,7 +25,7 @@ foreach (
     [
         'AI Retriever',
         'Native-vector RAG search for WordPress using MariaDB 11.7+ or compatible MySQL 9.x vector indexes. Embeds posts on publish/update and blends vector retrieval with standard WordPress search.',
-        'AI Retriever requires PHP 8.0 or higher.',
+        'AI Retriever requires PHP 8.1 or higher.',
         'Site language (%s)',
     ] as $message
 ) {

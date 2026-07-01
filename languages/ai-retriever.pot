@@ -20,7 +20,7 @@ msgstr ""
 msgid "AI Retriever"
 msgstr ""
 
-msgid "AI Retriever requires PHP 8.0 or higher."
+msgid "AI Retriever requires PHP 8.1 or higher."
 msgstr ""
 
 msgid "API key is configured"

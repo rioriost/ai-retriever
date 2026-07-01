@@ -1,9 +1,9 @@
 === AI Retriever ===
 Contributors: rioriost
 Tags: search, semantic search, vector search, embeddings, rag
-Requires at least: 6.0
+Requires at least: 6.6
 Tested up to: 7.0
-Requires PHP: 8.0
+Requires PHP: 8.1
 Stable tag: 0.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html

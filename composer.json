@@ -3,7 +3,7 @@
   "description": "Native-vector RAG search for WordPress.",
   "type": "wordpress-plugin",
   "require": {
-    "php": "^8.0"
+    "php": "^8.1"
   },
   "license": "GPL-2.0-or-later",
   "authors": [

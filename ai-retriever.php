@@ -4,9 +4,9 @@
  * Plugin URI:        https://github.com/rioriost/ai-retriever
  * Description:       Native-vector RAG search for WordPress using MariaDB 11.7+ or compatible MySQL 9.x vector indexes. Embeds posts on publish/update and blends vector retrieval with standard WordPress search.
  * Version:           0.2.0
- * Requires at least: 6.0
+ * Requires at least: 6.6
  * Tested up to:      7.0
- * Requires PHP:      8.0
+ * Requires PHP:      8.1
  * Author:            Rio Fujita
  * Author URI:        https://rio.st/
  * License:           GPL v2 or later
@@ -22,11 +22,11 @@ if (!defined("ABSPATH")) {
     exit();
 }
 
-if (version_compare(PHP_VERSION, "8.0.0", "<")) {
+if (version_compare(PHP_VERSION, "8.1.0", "<")) {
     add_action("admin_notices", static function (): void {
         echo '<div class="notice notice-error"><p>' .
             esc_html__(
-                "AI Retriever requires PHP 8.0 or higher.",
+                "AI Retriever requires PHP 8.1 or higher.",
                 "ai-retriever",
             ) .
             "</p></div>";
