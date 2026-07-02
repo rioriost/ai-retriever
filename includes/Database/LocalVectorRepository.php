@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever\Database;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR inserts/searches need explicit SQL for VEC_FromText and distance functions with vetted identifiers.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Native VECTOR inserts/searches need explicit SQL for VEC_FromText and distance functions with vetted identifiers.
 
 use RiTriever\Settings;
 
@@ -34,27 +34,32 @@ final class LocalVectorRepository
         global $wpdb;
         $table = VectorSchema::table_name();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $wpdb->delete(
-            $table,
-            ["post_id" => $post_id, "embedding_model" => $model],
-            ["%d", "%s"],
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE post_id = %d AND embedding_model = %s",
+                $table,
+                $post_id,
+                $model,
+            ),
         );
         foreach ($chunks as $i => $chunk) {
             $embedding = $embeddings[$i] ?? null;
             if (!is_array($embedding)) {
                 continue;
             }
-            $sql = $wpdb->prepare(
-                "INSERT INTO {$table} (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES (%d, %d, %s, %s, %s, VEC_FromText(%s), UTC_TIMESTAMP())",
-                $post_id,
-                $i,
-                self::clean_text((string) $chunk),
-                $content_hash,
-                self::clean_text($model),
-                self::vector_text($embedding),
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT INTO %i (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES (%d, %d, %s, %s, %s, VEC_FromText(%s), UTC_TIMESTAMP())",
+                    $table,
+                    $post_id,
+                    $i,
+                    self::clean_text((string) $chunk),
+                    $content_hash,
+                    self::clean_text($model),
+                    self::vector_text($embedding),
+                ),
             );
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above; VECTOR expression cannot be represented via wpdb insert.
-            $wpdb->query($sql);
         }
     }
 
@@ -80,10 +85,13 @@ final class LocalVectorRepository
                     }
 
                     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-                    $deleted = $wpdb->delete(
-                        $table,
-                        ["post_id" => $post_id, "embedding_model" => $model],
-                        ["%d", "%s"],
+                    $deleted = $wpdb->query(
+                        $wpdb->prepare(
+                            "DELETE FROM %i WHERE post_id = %d AND embedding_model = %s",
+                            $table,
+                            $post_id,
+                            $model,
+                        ),
                     );
                     if ($deleted === false) {
                         throw new \RuntimeException(
@@ -156,14 +164,14 @@ final class LocalVectorRepository
         }
 
         // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- Placeholder fragments are generated internally and values are passed separately.
-        $sql = $wpdb->prepare(
-            "INSERT INTO {$table} (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES " .
-                implode(",", $values),
-            ...$args,
+        $inserted = $wpdb->query(
+            $wpdb->prepare(
+                "INSERT INTO %i (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES " .
+                    implode(",", $values),
+                $table,
+                ...$args,
+            ),
         );
-        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
-        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above; VECTOR expression cannot be represented via wpdb insert.
-        $inserted = $wpdb->query($sql);
         // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
         if ($inserted === false) {
             throw new \RuntimeException(
@@ -177,10 +185,12 @@ final class LocalVectorRepository
     {
         global $wpdb;
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $wpdb->delete(
-            VectorSchema::table_name(),
-            ["post_id" => $post_id],
-            ["%d"],
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM %i WHERE post_id = %d",
+                VectorSchema::table_name(),
+                $post_id,
+            ),
         );
     }
 
@@ -209,20 +219,30 @@ final class LocalVectorRepository
     ): array {
         global $wpdb;
         $table = VectorSchema::table_name();
-        $distance_fn =
-            Settings::get("vector_distance") === "euclidean"
-                ? "VEC_DISTANCE_EUCLIDEAN"
-                : "VEC_DISTANCE_COSINE";
         $chunk_limit = max($top_k, $top_k * 5);
-        $sql = $wpdb->prepare(
-            "SELECT post_id, chunk_text, {$distance_fn}(embedding, VEC_FromText(%s)) AS distance FROM {$table} WHERE embedding_model = %s ORDER BY distance ASC LIMIT %d",
-            self::vector_text($query_embedding),
-            $model,
-            $chunk_limit,
-        );
-        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- $sql is prepared above and includes a vetted distance function name.
-        $rows = $wpdb->get_results($sql, ARRAY_A);
-        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $rows =
+            Settings::get("vector_distance") === "euclidean"
+                ? $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT post_id, chunk_text, VEC_DISTANCE_EUCLIDEAN(embedding, VEC_FromText(%s)) AS distance FROM %i WHERE embedding_model = %s ORDER BY distance ASC LIMIT %d",
+                        self::vector_text($query_embedding),
+                        $table,
+                        $model,
+                        $chunk_limit,
+                    ),
+                    ARRAY_A,
+                )
+                : $wpdb->get_results(
+                    $wpdb->prepare(
+                        "SELECT post_id, chunk_text, VEC_DISTANCE_COSINE(embedding, VEC_FromText(%s)) AS distance FROM %i WHERE embedding_model = %s ORDER BY distance ASC LIMIT %d",
+                        self::vector_text($query_embedding),
+                        $table,
+                        $model,
+                        $chunk_limit,
+                    ),
+                    ARRAY_A,
+                );
         $best_by_post = [];
         foreach (is_array($rows) ? $rows : [] as $row) {
             $post_id = (int) ($row["post_id"] ?? 0);

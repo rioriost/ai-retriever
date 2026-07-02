@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Diagnostics read custom vector/index metadata on demand; these values are volatile and not useful to cache.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.NoCaching -- Diagnostics read custom vector/index metadata on demand; these values are volatile and not useful to cache.
 
 use RiTriever\Database\VectorSchema;
 
@@ -97,7 +97,9 @@ final class IndexDiagnostics
         }
         $table = VectorSchema::table_name();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        $rows = $wpdb->get_col("SELECT DISTINCT post_id FROM {$table}");
+        $rows = $wpdb->get_col(
+            $wpdb->prepare("SELECT DISTINCT post_id FROM %i", $table),
+        );
         return array_values(array_map("intval", is_array($rows) ? $rows : []));
     }
 
@@ -109,7 +111,9 @@ final class IndexDiagnostics
         }
         $table = VectorSchema::table_name();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
+        return (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM %i", $table),
+        );
     }
 
     private static function failed_count(): int
@@ -118,7 +122,8 @@ final class IndexDiagnostics
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         return (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> ''",
+                "SELECT COUNT(*) FROM %i WHERE meta_key = %s AND meta_value <> ''",
+                $wpdb->postmeta,
                 RITRIEVER_POSTMETA_LAST_ERROR,
             ),
         );
@@ -132,7 +137,8 @@ final class IndexDiagnostics
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $rows = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
+                "SELECT post_id FROM %i WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
+                $wpdb->postmeta,
                 RITRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),
@@ -148,7 +154,8 @@ final class IndexDiagnostics
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
+                "SELECT post_id, meta_value FROM %i WHERE meta_key = %s AND meta_value <> '' ORDER BY post_id DESC LIMIT %d",
+                $wpdb->postmeta,
                 RITRIEVER_POSTMETA_LAST_ERROR,
                 $limit,
             ),

@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter,WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Uninstall cleanup must remove plugin-owned options, metadata, transients, and custom tables across sites without caching.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Uninstall cleanup must remove plugin-owned options, metadata, transients, and custom tables across sites without caching.
 
 if (!defined("WP_UNINSTALL_PLUGIN")) {
     exit();
@@ -39,21 +39,22 @@ function ritriever_uninstall_site(): void
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
     $wpdb->query(
         $wpdb->prepare(
-            "DELETE FROM {$wpdb->postmeta} WHERE meta_key IN ({$placeholders})",
+            "DELETE FROM %i WHERE meta_key IN ({$placeholders})",
+            $wpdb->postmeta,
             ...$postmeta_keys,
         ),
     );
 
     $table = $wpdb->prefix . "ritriever_chunks";
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-    $wpdb->query("DROP TABLE IF EXISTS {$table}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table));
 
     $queue_items_table = $wpdb->prefix . "ritriever_backfill_items";
     $queue_jobs_table = $wpdb->prefix . "ritriever_backfill_jobs";
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-    $wpdb->query("DROP TABLE IF EXISTS {$queue_items_table}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $queue_items_table));
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-    $wpdb->query("DROP TABLE IF EXISTS {$queue_jobs_table}");
+    $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $queue_jobs_table));
 }
 
 /**
@@ -68,7 +69,8 @@ function ritriever_delete_transients(string $prefix): void
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
     $option_names = $wpdb->get_col(
         $wpdb->prepare(
-            "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+            "SELECT option_name FROM %i WHERE option_name LIKE %s OR option_name LIKE %s",
+            $wpdb->options,
             $transient_like,
             $timeout_like,
         ),

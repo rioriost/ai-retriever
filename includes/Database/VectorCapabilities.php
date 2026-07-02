@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever\Database;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Capability probes intentionally create and query a temporary VECTOR table with internally controlled SQL fragments.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Capability probes intentionally create and query a temporary VECTOR table with internally controlled SQL fragments.
 
 final class VectorCapabilities
 {
@@ -98,7 +98,7 @@ final class VectorCapabilities
 
         $table = $wpdb->prefix . "ritriever_vector_probe";
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table));
 
         if ($cap["family"] !== "mariadb") {
             $result["message"] =
@@ -107,14 +107,16 @@ final class VectorCapabilities
         }
 
         $charset = $wpdb->get_charset_collate();
-        $sql =
-            "CREATE TABLE {$table} (" .
+        $sql = $wpdb->prepare(
+            "CREATE TABLE %i (" .
             " id INT NOT NULL AUTO_INCREMENT," .
             " label VARCHAR(32) NOT NULL," .
             " embedding VECTOR(3) NOT NULL," .
             " PRIMARY KEY (id)," .
             " VECTOR INDEX (embedding) M=3 DISTANCE=cosine" .
-            ") {$charset}";
+            ") {$charset}",
+            $table,
+        );
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Probe DDL is built from constants and charset only.
         if ($wpdb->query($sql) === false) {
             $result["message"] =
@@ -124,22 +126,28 @@ final class VectorCapabilities
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $inserted = $wpdb->query(
-            "INSERT INTO {$table} (label, embedding) VALUES " .
+            $wpdb->prepare(
+                "INSERT INTO %i (label, embedding) VALUES " .
                 "('x-axis', VEC_FromText('[1,0,0]'))," .
                 "('y-axis', VEC_FromText('[0,1,0]'))," .
                 "('near-x', VEC_FromText('[0.9,0.1,0]'))",
+                $table,
+            ),
         );
         if ($inserted === false) {
             $result["message"] =
                 "INSERT probe rows failed: " . $wpdb->last_error;
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-            $wpdb->query("DROP TABLE IF EXISTS {$table}");
+            $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table));
             return $result;
         }
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $explain = $wpdb->get_row(
-            "EXPLAIN SELECT label, VEC_DISTANCE_COSINE(embedding, VEC_FromText('[1,0,0]')) AS distance FROM {$table} ORDER BY distance ASC LIMIT 1",
+            $wpdb->prepare(
+                "EXPLAIN SELECT label, VEC_DISTANCE_COSINE(embedding, VEC_FromText('[1,0,0]')) AS distance FROM %i ORDER BY distance ASC LIMIT 1",
+                $table,
+            ),
             ARRAY_A,
         );
         $index_used =
@@ -148,12 +156,15 @@ final class VectorCapabilities
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $nearest = $wpdb->get_row(
-            "SELECT label, VEC_DISTANCE_COSINE(embedding, VEC_FromText('[1,0,0]')) AS distance FROM {$table} ORDER BY distance ASC LIMIT 1",
+            $wpdb->prepare(
+                "SELECT label, VEC_DISTANCE_COSINE(embedding, VEC_FromText('[1,0,0]')) AS distance FROM %i ORDER BY distance ASC LIMIT 1",
+                $table,
+            ),
             ARRAY_A,
         );
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table));
 
         if (!is_array($nearest) || (string) ($nearest["label"] ?? "") === "") {
             $result["message"] = "Vector query returned no nearest row.";

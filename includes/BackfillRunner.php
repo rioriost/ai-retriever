@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,PluginCheck.Security.DirectDB.UnescapedDBParameter,Squiz.PHP.DiscouragedFunctions.Discouraged -- Backfill jobs are stored in custom queue tables and require atomic SQL updates that are not covered by WordPress cache APIs.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber,Squiz.PHP.DiscouragedFunctions.Discouraged -- Backfill jobs are stored in custom queue tables and require atomic SQL updates that are not covered by WordPress cache APIs.
 
 use RiTriever\Database\BackfillQueueSchema;
 use RiTriever\Database\VectorSchema;
@@ -60,10 +60,11 @@ final class BackfillRunner
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
         if ($ids === []) {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Table name from schema helper.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
             $inserted = $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT INTO {$jobs} (status, phase, total_posts, created_at, updated_at, completed_at, last_error) VALUES (%s, %s, %d, %s, %s, %s, '')",
+                    "INSERT INTO %i (status, phase, total_posts, created_at, updated_at, completed_at, last_error) VALUES (%s, %s, %d, %s, %s, %s, '')",
+                    $jobs,
                     $status,
                     $phase,
                     0,
@@ -73,10 +74,11 @@ final class BackfillRunner
                 ),
             );
         } else {
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Table name from schema helper.
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
             $inserted = $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT INTO {$jobs} (status, phase, total_posts, created_at, updated_at, completed_at, last_error) VALUES (%s, %s, %d, %s, %s, NULL, '')",
+                    "INSERT INTO %i (status, phase, total_posts, created_at, updated_at, completed_at, last_error) VALUES (%s, %s, %d, %s, %s, NULL, '')",
+                    $jobs,
                     $status,
                     $phase,
                     count($ids),
@@ -343,8 +345,9 @@ final class BackfillRunner
             // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
             $ok = $wpdb->query(
                 $wpdb->prepare(
-                    "INSERT INTO {$items} (job_id, post_id, status, attempts, locked_by, created_at, updated_at) VALUES " .
+                    "INSERT INTO %i (job_id, post_id, status, attempts, locked_by, created_at, updated_at) VALUES " .
                         implode(",", $values),
+                    $items,
                     ...$args,
                 ),
             );
@@ -363,14 +366,22 @@ final class BackfillRunner
     {
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
-        $where = $active_only
-            ? "WHERE status IN ('queued', 'running', 'paused')"
-            : "";
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Table and status list are fixed.
-        $job = $wpdb->get_row(
-            "SELECT * FROM {$jobs} {$where} ORDER BY id DESC LIMIT 1",
-            ARRAY_A,
-        );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $job = $active_only
+            ? $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT * FROM %i WHERE status IN ('queued', 'running', 'paused') ORDER BY id DESC LIMIT 1",
+                    $jobs,
+                ),
+                ARRAY_A,
+            )
+            : $wpdb->get_row(
+                $wpdb->prepare(
+                    "SELECT * FROM %i ORDER BY id DESC LIMIT 1",
+                    $jobs,
+                ),
+                ARRAY_A,
+            );
         return is_array($job) ? $job : null;
     }
 
@@ -380,10 +391,11 @@ final class BackfillRunner
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
         $job_id = (int) $job["id"];
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Table name from schema helper.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT status, COUNT(*) AS count FROM {$items} WHERE job_id = %d GROUP BY status",
+                "SELECT status, COUNT(*) AS count FROM %i WHERE job_id = %d GROUP BY status",
+                $items,
                 $job_id,
             ),
             ARRAY_A,
@@ -400,10 +412,11 @@ final class BackfillRunner
             ($counts["skipped"] ?? 0) +
             ($counts["cancelled"] ?? 0);
         $errors = $counts["failed"] ?? 0;
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Table name from schema helper.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $failed_ids = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT post_id FROM {$items} WHERE job_id = %d AND status = 'failed' ORDER BY id ASC LIMIT 200",
+                "SELECT post_id FROM %i WHERE job_id = %d AND status = 'failed' ORDER BY id ASC LIMIT 200",
+                $items,
                 $job_id,
             ),
         );
@@ -460,10 +473,11 @@ final class BackfillRunner
     ): int {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $claimed = $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = 'processing', locked_by = %s, locked_at = UTC_TIMESTAMP(), attempts = attempts + 1, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'pending' ORDER BY id ASC LIMIT %d",
+                "UPDATE %i SET status = 'processing', locked_by = %s, locked_at = UTC_TIMESTAMP(), attempts = attempts + 1, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'pending' ORDER BY id ASC LIMIT %d",
+                $items,
                 $token,
                 $job_id,
                 $limit,
@@ -477,10 +491,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $ids = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT post_id FROM {$items} WHERE job_id = %d AND locked_by = %s AND status = 'processing' ORDER BY id ASC",
+                "SELECT post_id FROM %i WHERE job_id = %d AND locked_by = %s AND status = 'processing' ORDER BY id ASC",
+                $items,
                 $job_id,
                 $token,
             ),
@@ -503,11 +518,11 @@ final class BackfillRunner
         $items = BackfillQueueSchema::items_table();
         $post_ids = array_values(array_map("intval", $post_ids));
         $placeholders = implode(",", array_fill(0, count($post_ids), "%d"));
-        $args = array_merge([$status, $job_id, $token], $post_ids);
+        $args = array_merge([$items, $status, $job_id, $token], $post_ids);
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Placeholder list is generated from integer IDs.
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = %s, locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s AND post_id IN ({$placeholders})",
+                "UPDATE %i SET status = %s, locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s AND post_id IN ({$placeholders})",
                 ...$args,
             ),
         );
@@ -520,10 +535,11 @@ final class BackfillRunner
     ): void {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = 'pending', locked_by = '', locked_at = NULL, last_error = %s, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s",
+                "UPDATE %i SET status = 'pending', locked_by = '', locked_at = NULL, last_error = %s, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s",
+                $items,
                 $error,
                 $job_id,
                 $token,
@@ -535,10 +551,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = 'pending', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'processing' AND locked_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)",
+                "UPDATE %i SET status = 'pending', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'processing' AND locked_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)",
+                $items,
                 $job_id,
                 self::STALE_LOCK_MINUTES,
             ),
@@ -549,10 +566,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = 'pending', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'processing'",
+                "UPDATE %i SET status = 'pending', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status = 'processing'",
+                $items,
                 $job_id,
             ),
         );
@@ -562,10 +580,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$items} SET status = 'cancelled', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status IN ('pending', 'processing')",
+                "UPDATE %i SET status = 'cancelled', locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND status IN ('pending', 'processing')",
+                $items,
                 $job_id,
             ),
         );
@@ -578,9 +597,9 @@ final class BackfillRunner
         $jobs = BackfillQueueSchema::jobs_table();
         $items = BackfillQueueSchema::items_table();
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $job = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$jobs} WHERE id = %d", $job_id),
+            $wpdb->prepare("SELECT * FROM %i WHERE id = %d", $jobs, $job_id),
             ARRAY_A,
         );
         if (!is_array($job)) {
@@ -591,30 +610,34 @@ final class BackfillRunner
             return self::job_state($job);
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $pending = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$items} WHERE job_id = %d AND status = 'pending'",
+                "SELECT COUNT(*) FROM %i WHERE job_id = %d AND status = 'pending'",
+                $items,
                 $job_id,
             ),
         );
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $processing = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$items} WHERE job_id = %d AND status = 'processing'",
+                "SELECT COUNT(*) FROM %i WHERE job_id = %d AND status = 'processing'",
+                $items,
                 $job_id,
             ),
         );
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $failed = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$items} WHERE job_id = %d AND status = 'failed'",
+                "SELECT COUNT(*) FROM %i WHERE job_id = %d AND status = 'failed'",
+                $items,
                 $job_id,
             ),
         );
         $processed = (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$items} WHERE job_id = %d AND status IN ('done', 'failed', 'skipped', 'cancelled')",
+                "SELECT COUNT(*) FROM %i WHERE job_id = %d AND status IN ('done', 'failed', 'skipped', 'cancelled')",
+                $items,
                 $job_id,
             ),
         );
@@ -654,9 +677,9 @@ final class BackfillRunner
     {
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $job = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$jobs} WHERE id = %d", $job_id),
+            $wpdb->prepare("SELECT * FROM %i WHERE id = %d", $jobs, $job_id),
             ARRAY_A,
         );
         return is_array($job) ? $job : null;
@@ -670,10 +693,11 @@ final class BackfillRunner
     ): void {
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$jobs} SET status = %s, phase = %s, last_error = %s, updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                "UPDATE %i SET status = %s, phase = %s, last_error = %s, updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                $jobs,
                 $status,
                 $phase,
                 $error,
@@ -686,10 +710,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$jobs} SET last_error = %s, updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                "UPDATE %i SET last_error = %s, updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                $jobs,
                 $error,
                 $job_id,
             ),
@@ -700,10 +725,11 @@ final class BackfillRunner
     {
         global $wpdb;
         $jobs = BackfillQueueSchema::jobs_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Values are prepared below.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $wpdb->query(
             $wpdb->prepare(
-                "UPDATE {$jobs} SET completed_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                "UPDATE %i SET completed_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP() WHERE id = %d",
+                $jobs,
                 $job_id,
             ),
         );
@@ -715,10 +741,10 @@ final class BackfillRunner
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
         $jobs = BackfillQueueSchema::jobs_table();
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Queue reset.
-        $wpdb->query("DELETE FROM {$items}");
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Queue reset.
-        $wpdb->query("DELETE FROM {$jobs}");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $wpdb->query($wpdb->prepare("DELETE FROM %i", $items));
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+        $wpdb->query($wpdb->prepare("DELETE FROM %i", $jobs));
         delete_option(self::OPTION_KEY);
     }
 

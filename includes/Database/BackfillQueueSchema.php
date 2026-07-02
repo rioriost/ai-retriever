@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever\Database;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Custom queue table schema lifecycle requires explicit DDL with internally controlled table names.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Custom queue table schema lifecycle requires explicit DDL with internally controlled table names.
 
 use RiTriever\Logger;
 
@@ -37,8 +37,8 @@ final class BackfillQueueSchema
         $jobs = self::jobs_table();
         $items = self::items_table();
 
-        $jobs_sql =
-            "CREATE TABLE IF NOT EXISTS {$jobs} (" .
+        $jobs_sql = $wpdb->prepare(
+            "CREATE TABLE IF NOT EXISTS %i (" .
             " id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," .
             " status VARCHAR(20) NOT NULL DEFAULT 'queued'," .
             " phase VARCHAR(40) NOT NULL DEFAULT 'queued'," .
@@ -49,10 +49,12 @@ final class BackfillQueueSchema
             " last_error TEXT NULL," .
             " PRIMARY KEY (id)," .
             " KEY status_updated (status, updated_at)" .
-            ") {$charset}";
+            ") {$charset}",
+            $jobs,
+        );
 
-        $items_sql =
-            "CREATE TABLE IF NOT EXISTS {$items} (" .
+        $items_sql = $wpdb->prepare(
+            "CREATE TABLE IF NOT EXISTS %i (" .
             " id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT," .
             " job_id BIGINT UNSIGNED NOT NULL," .
             " post_id BIGINT UNSIGNED NOT NULL," .
@@ -68,7 +70,9 @@ final class BackfillQueueSchema
             " KEY job_status_id (job_id, status, id)," .
             " KEY job_lock (job_id, locked_by)," .
             " KEY stale_processing (status, locked_at)" .
-            ") {$charset}";
+            ") {$charset}",
+            $items,
+        );
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Fixed schema DDL.
         if ($wpdb->query($jobs_sql) === false) {
@@ -91,8 +95,8 @@ final class BackfillQueueSchema
         $items = self::items_table();
         $jobs = self::jobs_table();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Uninstall cleanup.
-        $wpdb->query("DROP TABLE IF EXISTS {$items}");
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $items));
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Uninstall cleanup.
-        $wpdb->query("DROP TABLE IF EXISTS {$jobs}");
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $jobs));
     }
 }

@@ -110,18 +110,21 @@ final class SearchInterceptor
 
     public static function on_the_title($title, $post_id = 0): string
     {
+        $title = (string) $title;
+        $safe_title = esc_html($title);
         if (
             !(bool) Settings::get("display_source_badges") ||
-            !is_string($title) ||
             $title === "" ||
             str_contains($title, "ritriever-hit-badges")
         ) {
-            return (string) $title;
+            return str_contains($title, "ritriever-hit-badges")
+                ? wp_kses($title, self::badge_allowed_html())
+                : $safe_title;
         }
         $source = self::source_for_render_post((int) $post_id);
         return $source === null
-            ? (string) $title
-            : self::badge_html($source) . esc_html((string) $title);
+            ? $safe_title
+            : self::badge_html($source) . $safe_title;
     }
 
     private static function core_search_ids(
@@ -382,6 +385,16 @@ final class SearchInterceptor
         return $html . "</span>";
     }
 
+    private static function badge_allowed_html(): array
+    {
+        return [
+            "span" => [
+                "class" => true,
+                "style" => true,
+            ],
+        ];
+    }
+
     private static function standard_search_label(): string
     {
         $english = "Standard search";
@@ -506,7 +519,8 @@ final class SearchInterceptor
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
         $option_names = $wpdb->get_col(
             $wpdb->prepare(
-                "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+                "SELECT option_name FROM %i WHERE option_name LIKE %s OR option_name LIKE %s",
+                $wpdb->options,
                 $transient_like,
                 $timeout_like,
             ),

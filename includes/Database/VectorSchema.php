@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace RiTriever\Database;
 
-// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR DDL and index maintenance require explicit database statements with internally controlled identifiers/settings.
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.DirectDatabaseQuery.SchemaChange -- Native VECTOR DDL and index maintenance require explicit database statements with internally controlled identifiers/settings.
 
 use RiTriever\Logger;
 use RiTriever\Settings;
@@ -29,7 +29,7 @@ final class VectorSchema
         global $wpdb;
         $table = self::table_name();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
-        $wpdb->query("DROP TABLE IF EXISTS {$table}");
+        $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $table));
         self::install_or_upgrade();
     }
 
@@ -41,7 +41,7 @@ final class VectorSchema
             return;
         }
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Fixed index name for controlled bulk loading.
-        $wpdb->query("ALTER TABLE {$table} DROP INDEX embedding");
+        $wpdb->query($wpdb->prepare("ALTER TABLE %i DROP INDEX embedding", $table));
     }
 
     public static function create_vector_index(): void
@@ -60,10 +60,23 @@ final class VectorSchema
         $table = self::table_name();
         $distance = (string) Settings::get("vector_distance");
         $m = (int) Settings::get("vector_index_m");
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Fixed index DDL with sanitized settings.
-        $ok = $wpdb->query(
-            "CREATE VECTOR INDEX embedding ON {$table} (embedding) M={$m} DISTANCE={$distance}",
-        );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange
+        $ok =
+            $distance === "euclidean"
+                ? $wpdb->query(
+                    $wpdb->prepare(
+                        "CREATE VECTOR INDEX embedding ON %i (embedding) M=%d DISTANCE=euclidean",
+                        $table,
+                        $m,
+                    ),
+                )
+                : $wpdb->query(
+                    $wpdb->prepare(
+                        "CREATE VECTOR INDEX embedding ON %i (embedding) M=%d DISTANCE=cosine",
+                        $table,
+                        $m,
+                    ),
+                );
         if ($ok === false) {
             Logger::error("schema", "failed to create vector index", [
                 "error" => $wpdb->last_error,
@@ -77,7 +90,11 @@ final class VectorSchema
         $table = self::table_name();
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Fixed table/index names.
         $rows = $wpdb->get_results(
-            "SHOW INDEX FROM {$table} WHERE Key_name = 'embedding'",
+            $wpdb->prepare(
+                "SHOW INDEX FROM %i WHERE Key_name = %s",
+                $table,
+                "embedding",
+            ),
             ARRAY_A,
         );
         return is_array($rows) && $rows !== [];
@@ -100,21 +117,47 @@ final class VectorSchema
 
         if ($cap["family"] === "mariadb") {
             $sql =
-                "CREATE TABLE IF NOT EXISTS {$table} (\n" .
-                "  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n" .
-                "  post_id BIGINT UNSIGNED NOT NULL,\n" .
-                "  chunk_index INT UNSIGNED NOT NULL,\n" .
-                "  chunk_text LONGTEXT NOT NULL,\n" .
-                "  content_hash CHAR(64) NOT NULL,\n" .
-                "  embedding_model VARCHAR(191) NOT NULL,\n" .
-                "  embedding VECTOR({$dim}) NOT NULL,\n" .
-                "  updated_at DATETIME NOT NULL,\n" .
-                "  PRIMARY KEY (id),\n" .
-                "  UNIQUE KEY post_chunk_model (post_id, chunk_index, embedding_model),\n" .
-                "  KEY post_lookup (post_id),\n" .
-                "  KEY model_lookup (embedding_model),\n" .
-                "  VECTOR INDEX (embedding) M={$m} DISTANCE={$distance}\n" .
-                ") {$charset}";
+                $distance === "euclidean"
+                    ? $wpdb->prepare(
+                        "CREATE TABLE IF NOT EXISTS %i (\n" .
+                        "  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n" .
+                        "  post_id BIGINT UNSIGNED NOT NULL,\n" .
+                        "  chunk_index INT UNSIGNED NOT NULL,\n" .
+                        "  chunk_text LONGTEXT NOT NULL,\n" .
+                        "  content_hash CHAR(64) NOT NULL,\n" .
+                        "  embedding_model VARCHAR(191) NOT NULL,\n" .
+                        "  embedding VECTOR(%d) NOT NULL,\n" .
+                        "  updated_at DATETIME NOT NULL,\n" .
+                        "  PRIMARY KEY (id),\n" .
+                        "  UNIQUE KEY post_chunk_model (post_id, chunk_index, embedding_model),\n" .
+                        "  KEY post_lookup (post_id),\n" .
+                        "  KEY model_lookup (embedding_model),\n" .
+                        "  VECTOR INDEX (embedding) M=%d DISTANCE=euclidean\n" .
+                        ") {$charset}",
+                        $table,
+                        $dim,
+                        $m,
+                    )
+                    : $wpdb->prepare(
+                        "CREATE TABLE IF NOT EXISTS %i (\n" .
+                        "  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,\n" .
+                        "  post_id BIGINT UNSIGNED NOT NULL,\n" .
+                        "  chunk_index INT UNSIGNED NOT NULL,\n" .
+                        "  chunk_text LONGTEXT NOT NULL,\n" .
+                        "  content_hash CHAR(64) NOT NULL,\n" .
+                        "  embedding_model VARCHAR(191) NOT NULL,\n" .
+                        "  embedding VECTOR(%d) NOT NULL,\n" .
+                        "  updated_at DATETIME NOT NULL,\n" .
+                        "  PRIMARY KEY (id),\n" .
+                        "  UNIQUE KEY post_chunk_model (post_id, chunk_index, embedding_model),\n" .
+                        "  KEY post_lookup (post_id),\n" .
+                        "  KEY model_lookup (embedding_model),\n" .
+                        "  VECTOR INDEX (embedding) M=%d DISTANCE=cosine\n" .
+                        ") {$charset}",
+                        $table,
+                        $dim,
+                        $m,
+                    );
         } else {
             // MySQL 9.x vector DDL is intentionally filterable until the exact target
             // server/index syntax is validated. The default mirrors the logical schema.
