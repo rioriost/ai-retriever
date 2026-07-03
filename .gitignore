@@ -5,6 +5,8 @@
 # in version control.
 dist/
 build/
+.wordpress-org/
+output/
 
 # macOS Finder metadata. Created on every directory the user opens
 # in Finder; never wanted in a release zip or commit.

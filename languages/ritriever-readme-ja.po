@@ -1,0 +1,224 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: RiTriever readme 0.2.3\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/ritriever\n"
+"POT-Creation-Date: 2026-07-03 00:00+0900\n"
+"PO-Revision-Date: 2026-07-03 00:00+0900\n"
+"Last-Translator: rioriost\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Source: readme.txt\n"
+"X-Domain: ritriever-readme\n"
+
+#. Short description.
+#: readme.txt:11
+msgid "Adds RAG-style vector retrieval to WordPress search using native database vector indexes and configurable embeddings."
+msgstr "ネイティブなデータベースのベクトルインデックスと設定可能な埋め込みを使い、WordPress検索にRAGスタイルのベクトル検索を追加します。"
+
+#: readme.txt:13
+msgid "Description"
+msgstr "説明"
+
+#: readme.txt:15
+msgid "RiTriever adds RAG-style vector retrieval to WordPress search. Published content is embedded, stored in a local vector table, and blended with standard WordPress search results."
+msgstr "RiTrieverはWordPress検索にRAGスタイルのベクトル検索を追加します。公開済みコンテンツを埋め込み化し、ローカルのベクトルテーブルに保存して、標準のWordPress検索結果と組み合わせて表示します。"
+
+#: readme.txt:17
+msgid "The plugin is intended for WordPress sites that can use native database vector support, primarily MariaDB 11.7 or later. It can index posts, pages, and configured public post types, then use those vectors during front-end search."
+msgstr "このプラグインは、主にMariaDB 11.7以降など、ネイティブなデータベースのベクトル機能を利用できるWordPressサイトを対象にしています。投稿、固定ページ、設定済みの公開投稿タイプをインデックス化し、フロントエンド検索時にそれらのベクトルを利用できます。"
+
+#: readme.txt:19
+msgid "Main features:"
+msgstr "主な機能:"
+
+#: readme.txt:21
+msgid "RAG-style search blending with standard WordPress search."
+msgstr "標準のWordPress検索と組み合わせたRAGスタイル検索。"
+
+#: readme.txt:22
+msgid "Native vector storage in the WordPress database."
+msgstr "WordPressデータベース内でのネイティブなベクトル保存。"
+
+#: readme.txt:23
+msgid "OpenAI and Azure OpenAI support for external embedding APIs."
+msgstr "外部埋め込みAPIとしてのOpenAIおよびAzure OpenAI対応。"
+
+#: readme.txt:24
+msgid "Local or self-hosted embedding support through Ollama, LM Studio, Infinity, TEI, or Custom HTTP endpoints."
+msgstr "Ollama、LM Studio、Infinity、TEI、Custom HTTPエンドポイントによるローカルまたはセルフホスト埋め込み対応。"
+
+#: readme.txt:25
+msgid "RAG target language selection from WordPress-supported locales."
+msgstr "WordPress対応ロケールからのRAG対象言語選択。"
+
+#: readme.txt:26
+msgid "Admin diagnostics for database support, embedding providers, indexing progress, and live vector queries."
+msgstr "データベース対応状況、埋め込みプロバイダー、インデックス進行状況、ライブベクトルクエリの管理画面診断。"
+
+#: readme.txt:28
+msgid "External API use is optional. WordPress 7.0 AI Client does not provide embedding generation, so RiTriever uses direct embedding APIs when external embeddings are configured. Post content and configured custom field values are sent to the selected provider to create embeddings."
+msgstr "外部APIの利用は任意です。WordPress 7.0のAI Clientは埋め込み生成を提供しないため、外部埋め込みを設定した場合、RiTrieverは埋め込みAPIを直接利用します。埋め込みを作成するため、投稿本文と設定済みカスタムフィールド値が選択したプロバイダーに送信されます。"
+
+#: readme.txt:30
+msgid "External services"
+msgstr "外部サービス"
+
+#: readme.txt:32
+msgid "RiTriever connects to external services only when you select an external embedding provider. It sends post titles, post excerpts, post content chunks, selected taxonomy terms, selected custom field values, and short admin test strings when indexing or testing embeddings. The vectors returned by the provider are stored in your WordPress database."
+msgstr "RiTrieverは、外部埋め込みプロバイダーを選択した場合にのみ外部サービスへ接続します。インデックス作成または埋め込みテスト時に、投稿タイトル、投稿抜粋、投稿本文チャンク、選択したタクソノミー用語、選択したカスタムフィールド値、短い管理画面テスト文字列を送信します。プロバイダーから返されたベクトルはWordPressデータベースに保存されます。"
+
+#: readme.txt:34
+msgid "WordPress 7.0 includes the WordPress AI Client for supported AI capabilities, but the current AI Client announcement and implementation do not include an embeddings API. Because RiTriever requires text embeddings for vector search, it calls embedding providers directly instead of using WordPress AI Client. Reference: https://make.wordpress.org/core/2026/03/24/introducing-the-ai-client-in-wordpress-7-0/"
+msgstr "WordPress 7.0には対応AI機能向けのWordPress AI Clientが含まれますが、現在のAI Clientの発表および実装には埋め込みAPIが含まれていません。RiTrieverはベクトル検索にテキスト埋め込みを必要とするため、WordPress AI Clientではなく埋め込みプロバイダーを直接呼び出します。参考: https://make.wordpress.org/core/2026/03/24/introducing-the-ai-client-in-wordpress-7-0/"
+
+#: readme.txt:36
+msgid "OpenAI sends embedding requests to OpenAI for `text-embedding-3-small` or `text-embedding-3-large`. This service is provided by OpenAI: Terms of use https://openai.com/policies/terms-of-use/ and Privacy policy https://openai.com/policies/privacy-policy/."
+msgstr "OpenAIは、`text-embedding-3-small`または`text-embedding-3-large`の埋め込みリクエストをOpenAIへ送信します。このサービスはOpenAIにより提供されます。利用規約: https://openai.com/policies/terms-of-use/ プライバシーポリシー: https://openai.com/policies/privacy-policy/"
+
+#: readme.txt:38
+msgid "Azure OpenAI sends embedding requests to your configured Azure OpenAI endpoint. This service is provided by Microsoft Azure: Terms of use https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA and Privacy statement https://privacy.microsoft.com/privacystatement."
+msgstr "Azure OpenAIは、設定したAzure OpenAIエンドポイントへ埋め込みリクエストを送信します。このサービスはMicrosoft Azureにより提供されます。利用規約: https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA プライバシーステートメント: https://privacy.microsoft.com/privacystatement"
+
+#: readme.txt:40
+msgid "Local or self-hosted endpoints, including Ollama, LM Studio, Infinity, TEI, and Custom HTTP, receive the same embedding inputs when selected. Review the terms, privacy policy, and network location for the endpoint you operate or configure."
+msgstr "Ollama、LM Studio、Infinity、TEI、Custom HTTPを含むローカルまたはセルフホストのエンドポイントは、選択された場合に同じ埋め込み入力を受け取ります。運用または設定するエンドポイントの利用規約、プライバシーポリシー、ネットワーク上の配置を確認してください。"
+
+#: readme.txt:42
+msgid "Installation"
+msgstr "インストール"
+
+#: readme.txt:44
+msgid "Upload the `ritriever` folder to `/wp-content/plugins/`, or install the release ZIP from the WordPress admin."
+msgstr "`ritriever`フォルダーを`/wp-content/plugins/`へアップロードするか、WordPress管理画面からリリースZIPをインストールします。"
+
+#: readme.txt:45
+msgid "Activate `RiTriever` from the Plugins screen."
+msgstr "プラグイン画面で`RiTriever`を有効化します。"
+
+#: readme.txt:46
+msgid "Open Settings -> RiTriever."
+msgstr "設定 -> RiTrieverを開きます。"
+
+#: readme.txt:47
+msgid "Run the database capability test."
+msgstr "データベース機能テストを実行します。"
+
+#: readme.txt:48
+msgid "Choose the RAG target language."
+msgstr "RAG対象言語を選択します。"
+
+#: readme.txt:49
+msgid "Configure and test the embedding provider."
+msgstr "埋め込みプロバイダーを設定してテストします。"
+
+#: readme.txt:50
+msgid "Initialize the index."
+msgstr "インデックスを初期化します。"
+
+#: readme.txt:52
+msgid "Frequently Asked Questions"
+msgstr "よくある質問"
+
+#: readme.txt:54
+msgid "Which external embedding providers are supported?"
+msgstr "どの外部埋め込みプロバイダーに対応していますか?"
+
+#: readme.txt:56
+msgid "OpenAI and Azure OpenAI are supported as external hosted embedding providers."
+msgstr "外部ホスト型の埋め込みプロバイダーとして、OpenAIとAzure OpenAIに対応しています。"
+
+#: readme.txt:58
+msgid "Can I use a local embedding server?"
+msgstr "ローカルの埋め込みサーバーを利用できますか?"
+
+#: readme.txt:60
+msgid "Yes. Ollama, LM Studio, Infinity, TEI, and Custom HTTP endpoints are available for local or self-hosted embeddings."
+msgstr "はい。ローカルまたはセルフホストの埋め込みには、Ollama、LM Studio、Infinity、TEI、Custom HTTPエンドポイントを利用できます。"
+
+#: readme.txt:62
+msgid "Does this plugin send content to external APIs?"
+msgstr "このプラグインはコンテンツを外部APIへ送信しますか?"
+
+#: readme.txt:64
+msgid "Only when an external embedding provider is configured. See the External services section for details."
+msgstr "外部埋め込みプロバイダーが設定されている場合にのみ送信します。詳細は「外部サービス」セクションを参照してください。"
+
+#: readme.txt:66
+msgid "Does it require native vector database support?"
+msgstr "ネイティブなベクトルデータベース対応は必要ですか?"
+
+#: readme.txt:68
+msgid "Yes. MariaDB 11.7 or later is the primary supported target for native vector columns and indexes."
+msgstr "はい。ネイティブなベクトルカラムとインデックスの主な対応対象はMariaDB 11.7以降です。"
+
+#: readme.txt:70
+msgid "What happens when I change the target language or embedding model?"
+msgstr "対象言語または埋め込みモデルを変更するとどうなりますか?"
+
+#: readme.txt:72
+msgid "The vector table must be rebuilt. Run initialization again after changing target language, provider, model, dimensions, or vector distance settings."
+msgstr "ベクトルテーブルの再構築が必要です。対象言語、プロバイダー、モデル、次元数、ベクトル距離設定を変更した後は、初期化を再実行してください。"
+
+#: readme.txt:74
+msgid "Screenshots"
+msgstr "スクリーンショット"
+
+#: readme.txt:76
+msgid "No screenshots are included in this release."
+msgstr "このリリースにはスクリーンショットは含まれていません。"
+
+#: readme.txt:78
+msgid "Changelog"
+msgstr "変更履歴"
+
+#: readme.txt:81
+msgid "Resolve remaining Plugin Check SQL preparation warnings for dynamic queue, vector, and uninstall queries."
+msgstr "動的なキュー、ベクトル、アンインストール関連クエリに残っていたPlugin CheckのSQL prepare警告を解消しました。"
+
+#: readme.txt:84
+msgid "Escape search title filter output consistently and prepare plugin table identifiers in direct SQL calls."
+msgstr "検索タイトルフィルター出力を一貫してエスケープし、直接SQL呼び出しでプラグインのテーブル識別子をprepareしました。"
+
+#: readme.txt:87
+msgid "Tighten WordPress.org review gates and clarify external embedding API documentation."
+msgstr "WordPress.orgレビューゲートを強化し、外部埋め込みAPIのドキュメントを明確化しました。"
+
+#: readme.txt:90
+msgid "Rename the public plugin name and WordPress.org slug to RiTriever."
+msgstr "公開プラグイン名とWordPress.orgスラッグをRiTrieverへ変更しました。"
+
+#: readme.txt:91
+msgid "Add RAG target language selection based on WordPress-supported locales."
+msgstr "WordPress対応ロケールに基づくRAG対象言語選択を追加しました。"
+
+#: readme.txt:92
+msgid "Document why direct embedding APIs are used instead of WordPress AI Client."
+msgstr "WordPress AI Clientではなく埋め込みAPIを直接利用する理由を文書化しました。"
+
+#: readme.txt:93
+msgid "Add WordPress.org release gates for PHPCS, Plugin Check, readme, i18n, and package contents."
+msgstr "PHPCS、Plugin Check、readme、i18n、パッケージ内容に関するWordPress.orgリリースゲートを追加しました。"
+
+#: readme.txt:95
+msgid "Upgrade Notice"
+msgstr "アップグレード通知"
+
+#: readme.txt:98
+msgid "Plugin Check SQL warning cleanup. No reindexing is required."
+msgstr "Plugin CheckのSQL警告を整理しました。再インデックスは不要です。"
+
+#: readme.txt:101
+msgid "Security hardening for WordPress.org review feedback. No reindexing is required."
+msgstr "WordPress.orgレビュー指摘に対応するセキュリティ強化です。再インデックスは不要です。"
+
+#: readme.txt:104
+msgid "Review-gate and documentation update. No reindexing is required."
+msgstr "レビューゲートとドキュメントの更新です。再インデックスは不要です。"
+
+#: readme.txt:107
+msgid "Changing the target language or embedding settings requires reinitializing the vector index."
+msgstr "対象言語または埋め込み設定を変更した場合は、ベクトルインデックスの再初期化が必要です。"

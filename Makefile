@@ -7,13 +7,20 @@ RELEASE_DIR := $(BUILD_DIR)/$(PLUGIN_SLUG)
 ZIP_FILE := $(DIST_DIR)/$(PLUGIN_SLUG)-$(PLUGIN_VERSION).zip
 PHP_FILES := ritriever.php uninstall.php includes
 POT_FILE := languages/$(PLUGIN_SLUG).pot
+WPO_SVN_URL ?= https://plugins.svn.wordpress.org/$(PLUGIN_SLUG)
+WPO_SVN_USERNAME ?= rioriost
+WPO_SVN_DIR ?= .wordpress-org/svn
+WPO_ASSETS_DIR ?= wordpress.org
+SVN_TAG_DIR := $(WPO_SVN_DIR)/tags/$(PLUGIN_VERSION)
 
-.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check apple-container-up apple-container-down apple-container-reset i18n-pot i18n-pot-check release-audit review-audit package-audit clean package release
+.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check apple-container-up apple-container-down apple-container-reset i18n-pot i18n-pot-check release-audit review-audit package-audit wordpress-org-assets-audit wordpress-org-checkout wordpress-org-stage wordpress-org-release clean package release
 
 help:
 	@echo "Targets:"
 	@echo "  make check    Run WordPress.org release gate checks"
 	@echo "  make release  Run release gates and build $(ZIP_FILE)"
+	@echo "  make wordpress-org-stage    Stage trunk, tags/$(PLUGIN_VERSION), and assets in $(WPO_SVN_DIR)"
+	@echo "  make wordpress-org-release  Commit staged release to WordPress.org SVN"
 	@echo "  make apple-container-up    Start local WordPress with Apple container"
 	@echo "  version       $(PLUGIN_VERSION)"
 	@echo "  make clean    Remove build artifacts"
@@ -66,6 +73,11 @@ release-audit:
 	test -f readme.txt
 	grep -q '^== External services ==$$' readme.txt
 
+wordpress-org-assets-audit:
+	test -f $(WPO_ASSETS_DIR)/banner-772x250.jpg
+	test -f $(WPO_ASSETS_DIR)/banner-1544x500.jpg
+	test -f $(WPO_ASSETS_DIR)/icon.svg
+
 review-audit:
 	! grep -RInE 'WPRetriever|WP_RETRIEVER|wp_retriever|wp-retriever|wpRetriever|AI Retriever|ai-retriever' -- $(PLUGIN_FILE) uninstall.php includes assets languages readme.txt README.md composer.json phpcs-security.xml.dist scripts
 	! grep -RInE 'wp_ajax_wp_|admin_post_wp_|wp_enqueue_script\("wp-' -- $(PLUGIN_FILE) includes assets
@@ -81,7 +93,7 @@ review-audit:
 	grep -RIn 'remember_cache_key' includes/SearchInterceptor.php >/dev/null
 	grep -RIn 'delete_option(self::CACHE_INDEX_OPTION)' includes/SearchInterceptor.php >/dev/null
 
-static-check: composer-validate lint phpcs-security composer-audit compose-config i18n-pot-check release-audit review-audit
+static-check: composer-validate lint phpcs-security composer-audit compose-config i18n-pot-check release-audit wordpress-org-assets-audit review-audit
 
 check: static-check clean package package-audit plugin-check
 
@@ -99,6 +111,7 @@ package:
 	cp -R includes $(RELEASE_DIR)/
 	if [ -d assets ]; then cp -R assets $(RELEASE_DIR)/; fi
 	if [ -d languages ]; then cp -R languages $(RELEASE_DIR)/; fi
+	find $(RELEASE_DIR) -name '.DS_Store' -delete
 	rm -f $(ZIP_FILE)
 	cd $(BUILD_DIR) && zip -qr ../$(ZIP_FILE) $(PLUGIN_SLUG)
 	@echo "Built $(ZIP_FILE)"
@@ -109,5 +122,36 @@ package-audit:
 	unzip -l $(ZIP_FILE) | grep -q '$(PLUGIN_SLUG)/$(POT_FILE)'
 	! unzip -l $(ZIP_FILE) | grep -E 'ai-retriever|wp-retriever|wp_retriever' >/dev/null
 	! unzip -l $(ZIP_FILE) | grep -E '/(tmp|vendor|build|dist|\\.git)/' >/dev/null
+	! unzip -l $(ZIP_FILE) | grep -E '/\\.[^/]+$$' >/dev/null
 
 release: check
+
+wordpress-org-checkout:
+	if [ -d "$(WPO_SVN_DIR)/.svn" ]; then \
+		svn update "$(WPO_SVN_DIR)"; \
+	else \
+		mkdir -p "$(dir $(WPO_SVN_DIR))"; \
+		svn checkout "$(WPO_SVN_URL)" "$(WPO_SVN_DIR)"; \
+	fi
+
+wordpress-org-stage: release wordpress-org-checkout
+	rm -rf "$(SVN_TAG_DIR)"
+	mkdir -p "$(WPO_SVN_DIR)/trunk" "$(SVN_TAG_DIR)" "$(WPO_SVN_DIR)/assets"
+	rsync -a --delete --exclude='.svn' "$(RELEASE_DIR)/" "$(WPO_SVN_DIR)/trunk/"
+	rsync -a --delete --exclude='.svn' "$(RELEASE_DIR)/" "$(SVN_TAG_DIR)/"
+	cp "$(WPO_ASSETS_DIR)/banner-772x250.jpg" "$(WPO_SVN_DIR)/assets/"
+	cp "$(WPO_ASSETS_DIR)/banner-1544x500.jpg" "$(WPO_SVN_DIR)/assets/"
+	cp "$(WPO_ASSETS_DIR)/icon.svg" "$(WPO_SVN_DIR)/assets/"
+	svn add --force "$(WPO_SVN_DIR)/trunk" "$(WPO_SVN_DIR)/tags" "$(WPO_SVN_DIR)/assets" --auto-props --parents --depth infinity >/dev/null
+	svn status "$(WPO_SVN_DIR)" | awk '/^!/ { print substr($$0, 9) }' | while IFS= read -r path; do [ -z "$$path" ] || svn rm --force "$$path"; done
+	@echo "Staged WordPress.org SVN release $(PLUGIN_VERSION) in $(WPO_SVN_DIR)"
+	@svn status "$(WPO_SVN_DIR)"
+
+wordpress-org-release: wordpress-org-stage
+	@set -e; \
+	if [ -f docs/.env ]; then set -a; . docs/.env; set +a; fi; \
+	if [ -n "$${SVN_PASSWORD:-}" ]; then \
+		svn commit "$(WPO_SVN_DIR)" --non-interactive --username "$(WPO_SVN_USERNAME)" --password "$$SVN_PASSWORD" -m "Release $(PLUGIN_SLUG) $(PLUGIN_VERSION)"; \
+	else \
+		svn commit "$(WPO_SVN_DIR)" --non-interactive --username "$(WPO_SVN_USERNAME)" -m "Release $(PLUGIN_SLUG) $(PLUGIN_VERSION)"; \
+	fi
