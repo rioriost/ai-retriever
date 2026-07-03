@@ -44,7 +44,7 @@ MariaDB 11.7 未満、MySQL 8.x はサポート対象外です。
 
 ### ZIP からインストール
 
-1. 配布 ZIP `ritriever-0.2.2.zip` を用意します。
+1. 配布 ZIP `ritriever-0.2.3.zip` を用意します。
 2. WordPress 管理画面で `プラグイン -> 新規追加 -> プラグインのアップロード` を開きます。
 3. ZIP をアップロードします。
 4. `RiTriever` を有効化します。
@@ -293,11 +293,17 @@ GPL v2 or later
 7. readme.txt / i18n POT / package content checks
 8. ZIP packaging
 
-Plugin Check は WordPress が起動している環境で実行します。Apple container で起動した WordPress を使う場合は、`WP_CONTAINER=<container-id-or-name>` と、必要に応じて `WP_PATH=/var/www/html` を指定してください。任意の WP-CLI ラッパーを使う場合は `WPCLI_COMMAND` でも指定できます。
+Plugin Check は release gate の一部として ZIP を WordPress にインストールして実行します。macOS の Apple Container CLI がある環境では、`make check` / `make release` が必要に応じて MariaDB + WordPress を自動起動します。手動で起動する場合は次を使います。
+
+1. `make apple-container-up`
+2. `make plugin-check`
+3. `make apple-container-down`
+
+既定の WordPress URL は `http://127.0.0.1:8081`、管理者は `admin` / `password` です。環境変数で `APPLE_CONTAINER_WP_PORT`、`APPLE_CONTAINER_NETWORK`、`APPLE_CONTAINER_DB`、`APPLE_CONTAINER_WP_VOLUME`、`WP_PATH` などを変更できます。既存の WordPress / WP-CLI を使う場合は `WP_CONTAINER=<container-id-or-name>`、`WPCLI_COMMAND='...'`、`COMPOSE='docker compose'` のいずれかを指定してください。
 
 出力例:
 
-- `dist/ritriever-0.2.2.zip`
+- `dist/ritriever-0.2.3.zip`
 
 ## 既知の制限
 

@@ -150,34 +150,26 @@ final class LocalVectorRepository
         }
 
         global $wpdb;
-        $values = [];
-        $args = [];
         foreach ($rows as $row) {
-            $values[] =
-                "(%d, %d, %s, %s, %s, VEC_FromText(%s), UTC_TIMESTAMP())";
-            $args[] = (int) $row["post_id"];
-            $args[] = (int) $row["chunk_index"];
-            $args[] = (string) $row["chunk_text"];
-            $args[] = (string) $row["content_hash"];
-            $args[] = (string) $row["embedding_model"];
-            $args[] = (string) $row["embedding"];
-        }
-
-        // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- Placeholder fragments are generated internally and values are passed separately.
-        $inserted = $wpdb->query(
-            $wpdb->prepare(
-                "INSERT INTO %i (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES " .
-                    implode(",", $values),
-                $table,
-                ...$args,
-            ),
-        );
-        // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
-        if ($inserted === false) {
-            throw new \RuntimeException(
-                "Failed to insert vector chunks: " .
-                    esc_html($wpdb->last_error),
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $inserted = $wpdb->query(
+                $wpdb->prepare(
+                    "INSERT INTO %i (post_id, chunk_index, chunk_text, content_hash, embedding_model, embedding, updated_at) VALUES (%d, %d, %s, %s, %s, VEC_FromText(%s), UTC_TIMESTAMP())",
+                    $table,
+                    (int) $row["post_id"],
+                    (int) $row["chunk_index"],
+                    (string) $row["chunk_text"],
+                    (string) $row["content_hash"],
+                    (string) $row["embedding_model"],
+                    (string) $row["embedding"],
+                ),
             );
+            if ($inserted === false) {
+                throw new \RuntimeException(
+                    "Failed to insert vector chunks: " .
+                        esc_html($wpdb->last_error),
+                );
+            }
         }
     }
 

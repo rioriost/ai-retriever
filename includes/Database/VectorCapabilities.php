@@ -106,7 +106,7 @@ final class VectorCapabilities
             return $result;
         }
 
-        $charset = $wpdb->get_charset_collate();
+        $charset = self::charset_collate_sql();
         $sql = $wpdb->prepare(
             "CREATE TABLE %i (" .
             " id INT NOT NULL AUTO_INCREMENT," .
@@ -114,10 +114,13 @@ final class VectorCapabilities
             " embedding VECTOR(3) NOT NULL," .
             " PRIMARY KEY (id)," .
             " VECTOR INDEX (embedding) M=3 DISTANCE=cosine" .
-            ") {$charset}",
+            ")",
             $table,
         );
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Probe DDL is built from constants and charset only.
+        if ($charset !== "") {
+            $sql .= " " . $charset;
+        }
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Probe DDL is built from constants and charset only.
         if ($wpdb->query($sql) === false) {
             $result["message"] =
                 "CREATE probe table failed: " . $wpdb->last_error;
@@ -177,6 +180,17 @@ final class VectorCapabilities
         $result["nearest"] = (string) $nearest["label"];
         $result["distance"] = (float) $nearest["distance"];
         return $result;
+    }
+
+    private static function charset_collate_sql(): string
+    {
+        global $wpdb;
+        $charset = preg_replace(
+            "/[^a-zA-Z0-9_ =-]/",
+            "",
+            $wpdb->get_charset_collate(),
+        );
+        return is_string($charset) ? trim($charset) : "";
     }
 
     /** @param array{family:string, native_vector:bool} $cap */

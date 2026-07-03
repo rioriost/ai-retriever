@@ -8,12 +8,13 @@ ZIP_FILE := $(DIST_DIR)/$(PLUGIN_SLUG)-$(PLUGIN_VERSION).zip
 PHP_FILES := ritriever.php uninstall.php includes
 POT_FILE := languages/$(PLUGIN_SLUG).pot
 
-.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check i18n-pot i18n-pot-check release-audit review-audit package-audit clean package release
+.PHONY: help version install-tools static-check check composer-validate lint phpcs-security composer-audit compose-config plugin-check apple-container-up apple-container-down apple-container-reset i18n-pot i18n-pot-check release-audit review-audit package-audit clean package release
 
 help:
 	@echo "Targets:"
 	@echo "  make check    Run WordPress.org release gate checks"
 	@echo "  make release  Run release gates and build $(ZIP_FILE)"
+	@echo "  make apple-container-up    Start local WordPress with Apple container"
 	@echo "  version       $(PLUGIN_VERSION)"
 	@echo "  make clean    Remove build artifacts"
 
@@ -39,7 +40,16 @@ compose-config:
 	if command -v docker >/dev/null 2>&1; then docker compose config >/dev/null && docker compose --profile tools config >/dev/null; else echo "docker not found; skipping Compose config validation"; fi
 
 plugin-check:
-	PLUGIN_ZIP="$(ZIP_FILE)" sh scripts/run-plugin-check.sh
+	APPLE_CONTAINER_AUTO_START=$${APPLE_CONTAINER_AUTO_START:-1} PLUGIN_ZIP="$(ZIP_FILE)" sh scripts/run-plugin-check.sh
+
+apple-container-up:
+	sh scripts/apple-container-wordpress.sh up
+
+apple-container-down:
+	sh scripts/apple-container-wordpress.sh down
+
+apple-container-reset:
+	sh scripts/apple-container-wordpress.sh reset
 
 i18n-pot:
 	php scripts/build-pot.php $(POT_FILE)

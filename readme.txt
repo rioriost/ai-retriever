@@ -4,7 +4,7 @@ Tags: search, semantic search, vector search, embeddings, rag
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.1
-Stable tag: 0.2.2
+Stable tag: 0.2.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,6 +77,9 @@ No screenshots are included in this release.
 
 == Changelog ==
 
+= 0.2.3 =
+* Resolve remaining Plugin Check SQL preparation warnings for dynamic queue, vector, and uninstall queries.
+
 = 0.2.2 =
 * Escape search title filter output consistently and prepare plugin table identifiers in direct SQL calls.
 
@@ -90,6 +93,9 @@ No screenshots are included in this release.
 * Add WordPress.org release gates for PHPCS, Plugin Check, readme, i18n, and package contents.
 
 == Upgrade Notice ==
+
+= 0.2.3 =
+Plugin Check SQL warning cleanup. No reindexing is required.
 
 = 0.2.2 =
 Security hardening for WordPress.org review feedback. No reindexing is required.

@@ -35,13 +35,14 @@ function ritriever_uninstall_site(): void
         "_ritriever_indexed_at",
         "_ritriever_last_error",
     ];
-    $placeholders = implode(",", array_fill(0, count($postmeta_keys), "%s"));
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
     $wpdb->query(
         $wpdb->prepare(
-            "DELETE FROM %i WHERE meta_key IN ({$placeholders})",
+            "DELETE FROM %i WHERE meta_key IN (%s, %s, %s)",
             $wpdb->postmeta,
-            ...$postmeta_keys,
+            $postmeta_keys[0],
+            $postmeta_keys[1],
+            $postmeta_keys[2],
         ),
     );
 

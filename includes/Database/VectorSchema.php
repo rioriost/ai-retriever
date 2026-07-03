@@ -113,7 +113,7 @@ final class VectorSchema
         $dim = (int) Settings::get("embedding_dimensions");
         $distance = (string) Settings::get("vector_distance");
         $m = (int) Settings::get("vector_index_m");
-        $charset = $wpdb->get_charset_collate();
+        $charset = self::charset_collate_sql();
 
         if ($cap["family"] === "mariadb") {
             $sql =
@@ -133,7 +133,7 @@ final class VectorSchema
                         "  KEY post_lookup (post_id),\n" .
                         "  KEY model_lookup (embedding_model),\n" .
                         "  VECTOR INDEX (embedding) M=%d DISTANCE=euclidean\n" .
-                        ") {$charset}",
+                        ")",
                         $table,
                         $dim,
                         $m,
@@ -153,11 +153,14 @@ final class VectorSchema
                         "  KEY post_lookup (post_id),\n" .
                         "  KEY model_lookup (embedding_model),\n" .
                         "  VECTOR INDEX (embedding) M=%d DISTANCE=cosine\n" .
-                        ") {$charset}",
+                        ")",
                         $table,
                         $dim,
                         $m,
                     );
+            if ($charset !== "") {
+                $sql .= " " . $charset;
+            }
         } else {
             // MySQL 9.x vector DDL is intentionally filterable until the exact target
             // server/index syntax is validated. The default mirrors the logical schema.
@@ -180,7 +183,7 @@ final class VectorSchema
             }
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Native VECTOR DDL is assembled from sanitized settings and fixed schema fragments.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Native VECTOR DDL is assembled from sanitized settings and fixed schema fragments.
         $ok = $wpdb->query($sql);
         if ($ok === false) {
             Logger::error("schema", "failed to create vector table", [
@@ -188,5 +191,16 @@ final class VectorSchema
                 "sql" => $sql,
             ]);
         }
+    }
+
+    private static function charset_collate_sql(): string
+    {
+        global $wpdb;
+        $charset = preg_replace(
+            "/[^a-zA-Z0-9_ =-]/",
+            "",
+            $wpdb->get_charset_collate(),
+        );
+        return is_string($charset) ? trim($charset) : "";
     }
 }

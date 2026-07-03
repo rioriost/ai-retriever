@@ -5,9 +5,29 @@ PLUGIN_SLUG="${PLUGIN_SLUG:-ritriever}"
 WP_PATH="${WP_PATH:-/var/www/html}"
 PLUGIN_CHECK_FLAGS="${PLUGIN_CHECK_FLAGS:---format=table}"
 PLUGIN_ZIP="${PLUGIN_ZIP:-}"
+APPLE_CONTAINER_AUTO_START="${APPLE_CONTAINER_AUTO_START:-0}"
+APPLE_CONTAINER_RUNNER="${APPLE_CONTAINER_RUNNER:-0}"
+APPLE_CONTAINER_NETWORK="${APPLE_CONTAINER_NETWORK:-ritriever-net}"
+APPLE_CONTAINER_DB="${APPLE_CONTAINER_DB:-ritriever-db}"
+APPLE_CONTAINER_WP="${APPLE_CONTAINER_WP:-ritriever-wp}"
+APPLE_CONTAINER_WP_VOLUME="${APPLE_CONTAINER_WP_VOLUME:-ritriever_wp_html}"
+APPLE_CONTAINER_WPCLI_IMAGE="${APPLE_CONTAINER_WPCLI_IMAGE:-wordpress:cli-php8.3}"
+WP_DB_NAME="${WP_DB_NAME:-wordpress}"
+WP_DB_USER="${WP_DB_USER:-wordpress}"
+WP_DB_PASSWORD="${WP_DB_PASSWORD:-wordpress}"
+REPO_ROOT="$(pwd)"
 
 if [ "$PLUGIN_ZIP" != "" ] && [ "${PLUGIN_ZIP#/}" = "$PLUGIN_ZIP" ]; then
-  PLUGIN_ZIP="$(pwd)/${PLUGIN_ZIP}"
+  PLUGIN_ZIP="${REPO_ROOT}/${PLUGIN_ZIP}"
+fi
+
+if [ "$APPLE_CONTAINER_AUTO_START" = "1" ] &&
+  [ "${WPCLI_COMMAND:-}" = "" ] &&
+  [ "${WP_CONTAINER:-}" = "" ] &&
+  [ "${COMPOSE:-}" = "" ] &&
+  ! command -v wp >/dev/null 2>&1; then
+  sh scripts/apple-container-wordpress.sh up >/dev/null
+  APPLE_CONTAINER_RUNNER=1
 fi
 
 run_wp() {
@@ -23,6 +43,11 @@ run_wp() {
     else
       container exec "$WP_CONTAINER" wp --path="$WP_PATH" "$@"
     fi
+    return
+  fi
+
+  if [ "$APPLE_CONTAINER_RUNNER" = "1" ]; then
+    container exec "$APPLE_CONTAINER_WP" wp --allow-root --path="$WP_PATH" "$@"
     return
   fi
 
@@ -45,6 +70,10 @@ if [ "$PLUGIN_ZIP" != "" ] && [ -f "$PLUGIN_ZIP" ]; then
   if [ "${WP_CONTAINER:-}" != "" ]; then
     CONTAINER_ZIP="/tmp/${PLUGIN_SLUG}.zip"
     container cp "$PLUGIN_ZIP" "${WP_CONTAINER}:${CONTAINER_ZIP}"
+    run_wp plugin install "$CONTAINER_ZIP" --force --activate >/dev/null
+  elif [ "$APPLE_CONTAINER_RUNNER" = "1" ]; then
+    CONTAINER_ZIP="/tmp/${PLUGIN_SLUG}.zip"
+    container cp "$PLUGIN_ZIP" "${APPLE_CONTAINER_WP}:${CONTAINER_ZIP}"
     run_wp plugin install "$CONTAINER_ZIP" --force --activate >/dev/null
   else
     run_wp plugin install "$PLUGIN_ZIP" --force --activate >/dev/null

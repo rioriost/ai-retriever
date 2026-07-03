@@ -332,31 +332,26 @@ final class BackfillRunner
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
         foreach (array_chunk($ids, 500) as $batch) {
-            $values = [];
-            $args = [];
             foreach ($batch as $post_id) {
-                $values[] = "(%d, %d, 'pending', 0, '', %s, %s)";
-                $args[] = $job_id;
-                $args[] = (int) $post_id;
-                $args[] = $now;
-                $args[] = $now;
-            }
-            // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- Placeholder fragments are generated internally and values are passed separately.
-            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
-            $ok = $wpdb->query(
-                $wpdb->prepare(
-                    "INSERT INTO %i (job_id, post_id, status, attempts, locked_by, created_at, updated_at) VALUES " .
-                        implode(",", $values),
+                $ok = $wpdb->insert(
                     $items,
-                    ...$args,
-                ),
-            );
-            // phpcs:enable WordPress.DB.PreparedSQL.NotPrepared
-            if ($ok === false) {
-                throw new \RuntimeException(
-                    "Failed to create backfill queue items: " .
-                        esc_html($wpdb->last_error),
+                    [
+                        "job_id" => $job_id,
+                        "post_id" => (int) $post_id,
+                        "status" => "pending",
+                        "attempts" => 0,
+                        "locked_by" => "",
+                        "created_at" => $now,
+                        "updated_at" => $now,
+                    ],
+                    ["%d", "%d", "%s", "%d", "%s", "%s", "%s"],
                 );
+                if ($ok === false) {
+                    throw new \RuntimeException(
+                        "Failed to create backfill queue items: " .
+                            esc_html($wpdb->last_error),
+                    );
+                }
             }
         }
     }
@@ -517,15 +512,19 @@ final class BackfillRunner
         global $wpdb;
         $items = BackfillQueueSchema::items_table();
         $post_ids = array_values(array_map("intval", $post_ids));
-        $placeholders = implode(",", array_fill(0, count($post_ids), "%d"));
-        $args = array_merge([$items, $status, $job_id, $token], $post_ids);
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.PreparedSQL.NotPrepared -- Placeholder list is generated from integer IDs.
-        $wpdb->query(
-            $wpdb->prepare(
-                "UPDATE %i SET status = %s, locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s AND post_id IN ({$placeholders})",
-                ...$args,
-            ),
-        );
+        foreach ($post_ids as $post_id) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
+            $wpdb->query(
+                $wpdb->prepare(
+                    "UPDATE %i SET status = %s, locked_by = '', locked_at = NULL, updated_at = UTC_TIMESTAMP() WHERE job_id = %d AND locked_by = %s AND post_id = %d",
+                    $items,
+                    $status,
+                    $job_id,
+                    $token,
+                    $post_id,
+                ),
+            );
+        }
     }
 
     private static function release_claimed_items(

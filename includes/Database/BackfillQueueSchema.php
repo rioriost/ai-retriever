@@ -33,7 +33,7 @@ final class BackfillQueueSchema
     {
         global $wpdb;
 
-        $charset = $wpdb->get_charset_collate();
+        $charset = self::charset_collate_sql();
         $jobs = self::jobs_table();
         $items = self::items_table();
 
@@ -49,9 +49,12 @@ final class BackfillQueueSchema
             " last_error TEXT NULL," .
             " PRIMARY KEY (id)," .
             " KEY status_updated (status, updated_at)" .
-            ") {$charset}",
+            ")",
             $jobs,
         );
+        if ($charset !== "") {
+            $jobs_sql .= " " . $charset;
+        }
 
         $items_sql = $wpdb->prepare(
             "CREATE TABLE IF NOT EXISTS %i (" .
@@ -70,18 +73,21 @@ final class BackfillQueueSchema
             " KEY job_status_id (job_id, status, id)," .
             " KEY job_lock (job_id, locked_by)," .
             " KEY stale_processing (status, locked_at)" .
-            ") {$charset}",
+            ")",
             $items,
         );
+        if ($charset !== "") {
+            $items_sql .= " " . $charset;
+        }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Fixed schema DDL.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Fixed schema DDL.
         if ($wpdb->query($jobs_sql) === false) {
             Logger::error("queue_schema", "failed to create jobs table", [
                 "error" => $wpdb->last_error,
             ]);
         }
 
-        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Fixed schema DDL.
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared,PluginCheck.Security.DirectDB.UnescapedDBParameter -- Fixed schema DDL.
         if ($wpdb->query($items_sql) === false) {
             Logger::error("queue_schema", "failed to create items table", [
                 "error" => $wpdb->last_error,
@@ -98,5 +104,16 @@ final class BackfillQueueSchema
         $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $items));
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange,WordPress.DB.PreparedSQL.NotPrepared -- Uninstall cleanup.
         $wpdb->query($wpdb->prepare("DROP TABLE IF EXISTS %i", $jobs));
+    }
+
+    private static function charset_collate_sql(): string
+    {
+        global $wpdb;
+        $charset = preg_replace(
+            "/[^a-zA-Z0-9_ =-]/",
+            "",
+            $wpdb->get_charset_collate(),
+        );
+        return is_string($charset) ? trim($charset) : "";
     }
 }
